@@ -1,0 +1,24 @@
+==============================================
+  🚀 ESPAÇO UBER - Servidor de Desenvolvimento
+  --------------------------------------------
+  🌐 Acesse: http://localhost:3000
+  📄 Painel Admin: http://localhost:3000/admin.html
+  🔑 Login: http://localhost:3000/login.html
+  --------------------------------------------
+  🔄 Live-reload ativo! As páginas serão
+     atualizadas automaticamente ao editar
+     arquivos HTML, CSS ou JS.
+  --------------------------------------------
+  🔌 API LosDados ativa (proxy server-to-server):
+     GET  http://localhost:3000/api/losdados/consulta?tipo=...&documento=...
+     (CPF, CNH, Telefone e Placa — chave injetada pelo servidor)
+  ⏹️  Para parar: Ctrl+C
+==============================================
+[PDF] ✅ Template UBER salvo em template_uber.pdf
+[PDF] ✅ Template UBER salvo em template_uber.pdf
+[PDF] ✅ Template UBER salvo em template_uber.pdf
+Warning: UnknownErrorException: Ensure that the `standardFontDataUrl` API parameter is provided.
+[PDF] ✅ Imagem do template UBER gerada (308604 bytes).
+[PDF] ✅ Template UBER salvo em template_uber.pdf
+[PDF] ✅ Template UBER salvo em template_uber.pdf
+🔄 Arquivo alterado: login.css - Recarregando páginas...

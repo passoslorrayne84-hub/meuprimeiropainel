@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Espaço Uber - Painel de controle premium para motoristas de aplicativo">
+  <title id="pageTitle">Espaço Uber | Painel Premium</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- ===== SIDEBAR ===== -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+          <path d="M2 17l10 5 10-5"/>
+          <path d="M2 12l10 5 10-5"/>
+        </svg>
+      </div>
+      <div class="logo-text">
+        <span class="logo-title" id="systemName">ESPAÇO <em>UBER</em></span>
+        <span class="logo-subtitle">Painel Premium</span>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <span class="nav-label">MENU PRINCIPAL</span>
+      <!-- Itens do menu lateral renderizados dinamicamente (FredContas_SidebarMenu) -->
+      <div id="dynamicSidebarNav"></div>
+      <!-- Categorias do CMS (FredContas_MasterModules) injetadas abaixo de "Geradores" -->
+      <div id="dynamicCmsNav"></div>
+    </nav>
+
+    <div class="sidebar-footer">
+      <span class="nav-label">CONFIGURAÇÕES</span>
+      <!-- Item de configurações renderizado dinamicamente (FredContas_SidebarMenu) -->
+      <div id="dynamicConfigNav"></div>
+      <div class="sidebar-user">
+        <div class="user-avatar">F</div>
+        <div class="user-info">
+          <span class="user-name">FREDÃO</span>
+          <span class="user-status"><span class="status-dot"></span>Online</span>
+        </div>
+      </div>
+      <button class="btn-logout" id="btnLogout">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        <span>Sair</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- ===== MAIN CONTENT ===== -->
+  <main class="main-content" id="mainContent">
+
+    <!-- ===== DASHBOARD ===== -->
+    <section class="tab-section active" id="tab-dashboard">
+      <header class="page-header">
+        <div class="header-title">
+          <h1>Bem-vindo de volta, <span class="highlight-pink">FREDÃO</span> 👋</h1>
+          <p>Seu painel de controle premium está pronto para ação.</p>
+        </div>
+        <button class="btn-primary" id="btnRenovar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+          Renovar Plano
+        </button>
+      </header>
+
+      <div class="status-cards">
+        <div class="status-card">
+          <div class="status-icon cyan">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+          </div>
+          <div class="status-info">
+            <span class="status-label">Plano Ativo</span>
+            <span class="status-value">Mensal</span>
+          </div>
+          <span class="status-badge active">ATIVO</span>
+        </div>
+        <div class="status-card">
+          <div class="status-icon pink">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          </div>
+          <div class="status-info">
+            <span class="status-label">Tempo Restante</span>
+            <span class="status-value" id="tempoRestante">27 dias</span>
+          </div>
+          <span class="status-badge warn">RENOVAR</span>
+        </div>
+        <div class="status-card">
+          <div class="status-icon green">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+          </div>
+          <div class="status-info">
+            <span class="status-label">Ganhos Hoje</span>
+            <span class="status-value">R$ 486,50</span>
+          </div>
+          <span class="status-badge up">+12%</span>
+        </div>
+      </div>
+
+      <!-- ===== SERVIÇOS EM DESTAQUE (PREMIUM) ===== -->
+      <section class="premium-highlights" id="premium-highlights">
+        <div class="premium-title">
+          <h2>⚡ Destaques da Espaço Uber</h2>
+          <p>Ferramentas premium selecionadas para você</p>
+        </div>
+        <div class="premium-grid">
+          <article class="premium-card premium-green" data-open="venda-de-bicos">
+            <div class="premium-glow"></div>
+            <div class="premium-icon">
+              <i class="fas fa-bolt"></i>
+            </div>
+            <div class="premium-body">
+              <h3>Venda de Bicos</h3>
+              <p>Compre seu bico de forma automática na melhor % disponível.</p>
+            </div>
+            <button class="btn-premium" data-open="venda-de-bicos">Ir direto</button>
+          </article>
+
+          <article class="premium-card premium-gold" data-open="modo-foto-99">
+            <div class="premium-glow"></div>
+            <div class="premium-icon">
+              <i class="fas fa-camera"></i>
+            </div>
+            <div class="premium-body">
+              <h3>Modo Foto 99</h3>
+              <p>Crie suas contas com facilidade. Funcional direto no painel.</p>
+            </div>
+            <button class="btn-premium" data-open="modo-foto-99">Ir direto</button>
+          </article>
+        </div>
+      </section>
+
+      <div class="section-title">
+        <h2>Serviços Disponíveis</h2>
+        <p>Selecione um serviço para começar</p>
+      </div>
+
+      <div class="services-grid">
+        <article class="service-card" data-service="uber">
+          <div class="card-glow"></div>
+          <div class="card-header">
+            <div class="service-icon uber">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17H3a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1h2l3-3h6l3 3h2a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1h-2"/><circle cx="7" cy="14" r="2"/><circle cx="17" cy="14" r="2"/></svg>
+            </div>
+            <span class="service-tag">POPULAR</span>
+          </div>
+          <h3>Uber</h3>
+          <p>Ferramentas completas para otimizar suas corridas, ganhos e performance na plataforma Uber.</p>
+          <div class="card-stats">
+            <div class="stat"><span class="stat-num">128</span><span class="stat-label">Corridas</span></div>
+            <div class="stat"><span class="stat-num">4.9</span><span class="stat-label">Rating</span></div>
+            <div class="stat"><span class="stat-num">R$ 2.4k</span><span class="stat-label">Semana</span></div>
+          </div>
+          <button class="btn-service" data-open="uber">Abrir Serviço</button>
+        </article>
+
+        <article class="service-card" data-service="99">
+          <div class="card-glow"></div>
+          <div class="card-header">
+            <div class="service-icon nine-nine">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2z"/><path d="M8 12h8"/></svg>
+            </div>
+            <span class="service-tag">NOVO</span>
+          </div>
+          <h3>99</h3>
+          <p>Gestão inteligente para motoristas 99, com análises de rotas e maximização de lucro.</p>
+          <div class="card-stats">
+            <div class="stat"><span class="stat-num">86</span><span class="stat-label">Corridas</span></div>
+            <div class="stat"><span class="stat-num">4.7</span><span class="stat-label">Rating</span></div>
+            <div class="stat"><span class="stat-num">R$ 1.8k</span><span class="stat-label">Semana</span></div>
+          </div>
+          <button class="btn-service" data-open="99">Abrir Serviço</button>
+        </article>
+
+        <article class="service-card" data-service="consultas">
+          <div class="card-glow"></div>
+          <div class="card-header">
+            <div class="service-icon consultas">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+            </div>
+            <span class="service-tag">PRO</span>
+          </div>
+          <h3>Consultas</h3>
+          <p>Consultas avançadas de dados e relatórios detalhados para decisões estratégicas.</p>
+          <div class="card-stats">
+            <div class="stat"><span class="stat-num">45</span><span class="stat-label">Consultas</span></div>
+            <div class="stat"><span class="stat-num">99%</span><span class="stat-label">Precisão</span></div>
+            <div class="stat"><span class="stat-num">24h</span><span class="stat-label">Suporte</span></div>
+          </div>
+          <button class="btn-service" data-open="consultas">Abrir Serviço</button>
+        </article>
+      </div>
+
+      <!-- ===== VITRINE DE PLANOS (DINÂMICA) ===== -->
+      <div class="section-title plans-section-title">
+        <h2>Planos de Assinatura</h2>
+        <p>Escolha o plano ideal para desbloquear todos os recursos</p>
+      </div>
+      <div class="plans-vitrine" id="plansVitrine">
+        <!-- Populado dinamicamente via FredContas_MasterPlanos -->
+      </div>
+    </section>
+
+    <!-- ===== NOVIDADES ===== -->
+    <section class="tab-section" id="tab-novidades">
+      <header class="page-header">
+        <div class="header-title">
+          <h1>Novidades <span class="highlight-pink">e Atualizações</span></h1>
+          <p>Fique por dentro das últimas novidades e melhorias do painel.</p>
+        </div>
+      </header>
+      <div class="section-title">
+        <h2>Últimas Novidades</h2>
+        <p>Novos recursos e atualizações recentes</p>
+      </div>
+      <div class="services-grid" id="novidadesList">
+        <article class="service-card">
+          <div class="card-glow"></div>
+          <div class="card-header">
+            <div class="service-icon uber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></div>
+            <span class="service-tag">NOVO</span>
+          </div>
+          <h3>Bem-vindo às Novidades</h3>
+          <p>Novidades e atualizações do Espaço Uber aparecerão aqui em breve.</p>
+          <button class="btn-service" data-open="novidades">Ver Detalhes</button>
+        </article>
+      </div>
+    </section>
+
+    <!-- ===== FERRAMENTAS ===== -->
+    <section class="tab-section" id="tab-ferramentas">
+      <header class="page-header">
+        <div class="header-title">
+          <h1>Ferramentas <span class="highlight-cyan">Pro</span></h1>
+          <p>Conjunto completo de utilitários para maximizar sua produtividade.</p>
+        </div>
+      </header>
+      <div class="section-title">
+        <h2>Utilitários</h2>
+        <p>Ferramentas essenciais do dia a dia</p>
+      </div>
+      <div class="services-grid">
+        <article class="service-card">
+          <div class="card-glow"></div>
+          <div class="card-header">
+            <div class="service-icon uber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></div>
+            <span class="service-tag">EDITOR</span>
+          </div>
+          <h3>Editor de Dados</h3>
+          <p>Edite e manipule dados de corridas com precisão cirúrgica e exportação rápida.</p>
+          <button class="btn-service" data-open="ferramenta-editor">Abrir</button>
+        </article>
+        <article class="service-card">
+          <div class="card-glow"></div>
+          <div class="card-header">
+            <div class="service-icon nine-nine"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+            <span class="service-tag">ANÁLISE</span>
+          </div>
+          <h3>Analisador de Rotas</h3>
+          <p>Identifique as rotas mais lucrativas com análise de tráfego em tempo real.</p>
+          <button class="btn-service" data-open="ferramenta-rotas">Abrir</button>
+        </article>
+        <article class="service-card">
+          <div class="card-glow"></div>
+          <div class="card-header">
+            <div class="service-icon consultas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
+            <span class="service-tag">RELATÓRIO</span>
+          </div>
+          <h3>Gerador de Relatórios</h3>
+          <p>Crie relatórios profissionais de desempenho com gráficos interativos.</p>
+          <button class="btn-service" data-open="ferramenta-relatorio">Abrir</button>
+        </article>
+      </div>
+    </section>
+
+    <!-- ===== CHECKERS ===== -->
+    <section class="tab-section" id="tab-checkers">
+      <header class="page-header">
+        <div class="header-title">
+          <h1>Checkers <span class="highlight-cyan">Inteligentes</span></h1>
+          <p>Verificações automáticas para manter sua conta sempre saudável.</p>
+        </div>
+      </header>
+      <div class="section-title">
+        <h2>Sistema de Verificação</h2>
+        <p>Monitore a integridade da sua conta em tempo real</p>
+      </div>
+      <div class="services-grid">
+        <article class="service-card">
+          <div class="card-glow"></div>
+          <div class="card-header">
+            <div class="service-icon uber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
+            <span class="service-tag">SAÚDE</span>
+          </div>
+          <h3>Check de Conta</h3>
+          <p>Verificação completa do status da conta, documentos e conformidade da plataforma.</p>
+          <div class="check-status"><span class="check-dot ok"></span> Todos os sistemas operacionais</div>
+          <button class="btn-service" data-open="check-conta">Executar Check</button>
+        </article>
+        <article class="service-card">
+          <div class="card-glow"></div>
+          <div class="card-header">
+            <div class="service-icon nine-nine"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+            <span class="service-tag">SEGURANÇA</span>
+          </div>
+          <h3>Check de Segurança</h3>
+          <p>Auditoria de segurança da conta, sessões ativas e dispositivos vinculados.</p>
+          <div class="check-status"><span class="check-dot ok"></span> 2 dispositivos verificados</div>
+          <button class="btn-service" data-open="check-seguranca">Executar Check</button>
+        </article>
+        <article class="service-card">
+          <div class="card-glow"></div>
+          <div class="card-header">
+            <div class="service-icon consultas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg></div>
+            <span class="service-tag">FINANCEIRO</span>
+          </div>
+          <h3>Check Financeiro</h3>
+          <p>Análise de ganhos, repasses pendentes e projeções de receita da semana.</p>
+          <div class="check-status"><span class="check-dot warn"></span> 1 repasse pendente</div>
+          <button class="btn-service" data-open="check-financeiro">Executar Check</button>
+        </article>
+      </div>
+    </section>
+
+    <!-- ===== FACIAL AI ===== -->
+    <section class="tab-section" id="tab-facial">
+      <header class="page-header">
+        <div class="header-title">
+          <h1>Facial <span class="highlight-pink">AI</span></h1>
+          <p>Reconhecimento facial avançado com inteligência artificial.</p>
+        </div>
+      </header>
+      <div class="section-title">
+        <h2>Reconhecimento Facial</h2>
+        <p>Processamento de imagens com IA de última geração</p>
+      </div>
+      <div class="services-grid">
+        <article class="service-card">
+          <div class="card-glow"></div>
+          <div class="card-header">
+            <div class="service-icon uber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2z"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg></div>
+            <span class="service-tag">IA</span>
+          </div>
+          <h3>Verificação Facial</h3>
+          <p>Verificação de identidade por reconhecimento facial com precisão de 99.9%.</p>
+          <button class="btn-service" data-open="facial-verificacao">Iniciar</button>
+        </article>
+        <article class="service-card">
+          <div class="card-glow"></div>
+          <div class="card-header">
+            <div class="service-icon nine-nine"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></div>
+            <span class="service-tag">IA</span>
+          </div>
+          <h3>Análise de Imagem</h3>
+          <p>Análise detalhada de imagens para detecção de padrões e anomalias.</p>
+          <button class="btn-service" data-open="facial-analise">Iniciar</button>
+        </article>
+        <article class="service-card">
+          <div class="card-glow"></div>
+          <div class="card-header">
+            <div class="service-icon consultas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></div>
+            <span class="service-tag">IA</span>
+          </div>
+          <h3>Reconhecimento de Documentos</h3>
+          <p>Extração automática de dados de documentos com OCR inteligente.</p>
+          <button class="btn-service" data-open="facial-documentos">Iniciar</button>
+        </article>
+      </div>
+    </section>
+
+    <!-- ===== GERADORES ===== -->
+    <section class="tab-section" id="tab-geradores">
+      <header class="page-header">
+        <div class="header-title">
+          <h1>Geradores <span class="highlight-cyan">Premium</span></h1>
+          <p>Ferramentas de geração automática para otimizar seu trabalho.</p>
+        </div>
+      </header>
+      <div class="section-title">
+        <h2>Geradores Automáticos</h2>
+        <p>Crie conteúdo e dados em segundos</p>
+      </div>
+      <div class="services-grid">
+        <article class="service-card">
+          <div class="card-glow"></div>
+          <div class="card-header">
+            <div class="service-icon uber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div>
+            <span class="service-tag">RÁPIDO</span>
+          </div>
+          <h3>Gerador de Dados</h3>
+          <p>Gere dados simulados realistas para testes e demonstrações em segundos.</p>
+          <button class="btn-service" data-open="gerador-dados">Gerar</button>
+        </article>
+        <article class="service-card">
+          <div class="card-glow"></div>
+          <div class="card-header">
+            <div class="service-icon nine-nine"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 17l6-6-6-6"/><path d="M12 19h8"/></svg></div>
+            <span class="service-tag">TEXTO</span>
+          </div>
+          <h3>Gerador de Texto</h3>
+          <p>Crie textos profissionais para relatórios, mensagens e comunicações.</p>
+          <button class="btn-service" data-open="gerador-texto">Gerar</button>
+        </article>
+        <article class="service-card">
+          <div class="card-glow"></div>
+          <div class="card-header">
+            <div class="service-icon consultas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg></div>
+            <span class="service-tag">PLANILHA</span>
+          </div>
+          <h3>Gerador de Planilhas</h3>
+          <p>Exporte planilhas formatadas com dados de corridas e relatórios financeiros.</p>
+          <button class="btn-service" data-open="gerador-planilha">Gerar</button>
+        </article>
+      </div>
+    </section>
+
+    <!-- ===== CONFIGURAÇÕES ===== -->
+    <section class="tab-section" id="tab-configuracoes">
+      <header class="page-header">
+        <div class="header-title">
+          <h1>Configurações <span class="highlight-cyan">do Sistema</span></h1>
+          <p>Personalize sua experiência no painel Espaço Uber.</p>
+        </div>
+      </header>
+      <div class="section-title">
+        <h2>Preferências</h2>
+        <p>Ajuste as opções do seu painel</p>
+      </div>
+      <div class="services-grid">
+        <article class="service-card">
+          <div class="card-glow"></div>
+          <div class="card-header">
+            <div class="service-icon uber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></div>
+            <span class="service-tag">CONTA</span>
+          </div>
+          <h3>Perfil da Conta</h3>
+          <p>Gerencie suas informações pessoais, preferências e dados de acesso ao painel.</p>
+          <button class="btn-service" data-open="config-perfil">Gerenciar</button>
+        </article>
+        <article class="service-card">
+          <div class="card-glow"></div>
+          <div class="card-header">
+            <div class="service-icon nine-nine"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+            <span class="service-tag">SEGURANÇA</span>
+          </div>
+          <h3>Segurança</h3>
+          <p>Altere sua senha, configure autenticação em dois fatores e revise sessões ativas.</p>
+          <button class="btn-service" data-open="config-seguranca">Gerenciar</button>
+        </article>
+        <article class="service-card">
+          <div class="card-glow"></div>
+          <div class="card-header">
+            <div class="service-icon consultas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></div>
+            <span class="service-tag">NOTIFICAÇÕES</span>
+          </div>
+          <h3>Notificações</h3>
+          <p>Personalize alertas de ganhos, corridas, atualizações do sistema e promoções.</p>
+          <button class="btn-service" data-open="config-notificacoes">Gerenciar</button>
+        </article>
+      </div>
+    </section>
+
+    <!-- ===== CATEGORIA DO CMS (FILTRO REATIVO) ===== -->
+    <!-- Seção dinâmica exibida ao clicar em uma categoria injetada na sidebar.
+         O conteúdo é preenchido por renderCategoryTab() no script.js. -->
+    <section class="tab-section" id="tab-categoria">
+      <header class="page-header">
+        <div class="header-title">
+          <h1 id="categoriaTitle">Categoria</h1>
+          <p id="categoriaSubtitle">Serviços desta categoria</p>
+        </div>
+      </header>
+      <div id="categoriaContent"></div>
+    </section>
+  </main>
+
+  <!-- ===== OVERLAY DE MANUTENÇÃO ===== -->
+  <div class="maintenance-overlay" id="maintenanceOverlay">
+    <div class="maintenance-card">
+      <div class="maintenance-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+      </div>
+      <h3>Sistema em Manutenção</h3>
+      <p id="maintenanceMessage">Estamos realizando melhorias. Volte em breve!</p>
+    </div>
+  </div>
+
+  <!-- ===== MODAL DE CARREGAMENTO ===== -->
+  <div class="modal-overlay" id="loadingModal">
+    <div class="modal-content">
+      <div class="modal-loader">
+        <div class="loader-ring"></div>
+        <div class="loader-core">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17H3a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1h2l3-3h6l3 3h2a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1h-2"/><circle cx="7" cy="14" r="2"/><circle cx="17" cy="14" r="2"/></svg>
+        </div>
+      </div>
+      <h3 id="modalTitle">Carregando Serviço...</h3>
+      <p id="modalMessage">Inicializando módulo Uber</p>
+      <div class="modal-progress">
+        <div class="progress-bar" id="progressBar"></div>
+      </div>
+      <span class="modal-percent" id="modalPercent">0%</span>
+    </div>
+  </div>
+
+  <!-- ===== TOAST NOTIFICATION ===== -->
+  <div class="toast" id="toast">
+    <div class="toast-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+    </div>
+    <div class="toast-text">
+      <strong id="toastTitle">Sucesso</strong>
+      <span id="toastMessage">Operação concluída</span>
+    </div>
+  </div>
+
+  <!-- ===== MODAL DE NOVIDADES / AVISOS ===== -->
+  <div class="welcome-modal-overlay" id="welcome-modal">
+    <div class="welcome-modal-box">
+      <div class="welcome-modal-icon">
+        <i class="fas fa-sparkles"></i>
+      </div>
+      <h2>Novidades no Painel ✨</h2>
+      <p class="welcome-modal-sub">Confira as novidades que acabaram de chegar:</p>
+      <ul class="welcome-modal-list">
+        <li><i class="fas fa-fire"></i> Venda de Bicos (Direto no painel)</li>
+        <li><i class="fas fa-rocket"></i> Tracker Avançado</li>
+      </ul>
+      <button class="btn-welcome" id="btnWelcomeClose">Entendido</button>
+    </div>
+  </div>
+
+  <!-- ===== MEDIDOR DINÂMICO DE CONSULTAS (RODAPÉ) ===== -->
+  <div class="consulta-meter-footer" id="consultaMeterFooter" hidden>
+    <div class="consulta-meter-card">
+      <div class="consulta-meter-head">
+        <div class="consulta-meter-title">
+          <i class="fas fa-gauge-high"></i>
+          <span>Minhas Consultas</span>
+        </div>
+        <span class="consulta-meter-badge" id="consultaMeterBadge">—</span>
+      </div>
+      <div class="consulta-meter-bar">
+        <div class="consulta-meter-fill" id="consultaMeterFill" style="width:0%"></div>
+      </div>
+      <div class="consulta-meter-text" id="consultaMeterText">Carregando seu saldo de consultas...</div>
+    </div>
+  </div>
+
+  <script src="config-store.js" defer></script>
+  <script src="veiculos-reais.js" defer></script>
+  <!-- Template do CRLV 100% HTML/CSS (usado no preview e na geração do PDF).
+       Precisa vir ANTES do script.js para expor window.CRLVTemplate. -->
+  <script src="templateCRLV.js" defer></script>
+  <script src="script.js" defer></script>
+</body>
+</html>

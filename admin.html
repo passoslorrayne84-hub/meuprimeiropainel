@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Fred Contas - Painel de Administração SaaS">
+  <title>Fred Contas | Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+  <!-- ===== SIDEBAR ===== -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon">
+        <i class="fas fa-layer-group"></i>
+      </div>
+      <div class="logo-text">
+        <span class="logo-title">FRED <em>CONTAS</em></span>
+        <span class="logo-subtitle">Admin Console</span>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <span class="nav-label">OPERAÇÃO</span>
+      <a href="#" class="nav-item active" data-tab="dashboard">
+        <i class="fas fa-gauge-high"></i>
+        <span>Dashboard</span>
+      </a>
+      <a href="#" class="nav-item" data-tab="usuarios">
+        <i class="fas fa-users"></i>
+        <span>Gestão de Clientes</span>
+        <span class="nav-badge" id="userCount">0</span>
+      </a>
+      <a href="#" class="nav-item" data-tab="acompanhamento">
+        <i class="fas fa-gauge"></i>
+        <span>Acompanhamento</span>
+      </a>
+      <a href="#" class="nav-item" data-tab="planos">
+        <i class="fas fa-crown"></i>
+        <span>Planos e Vendas</span>
+      </a>
+      <a href="#" class="nav-item" data-tab="modulos">
+        <i class="fas fa-cubes"></i>
+        <span>Catálogo de Serviços</span>
+      </a>
+      <a href="#" class="nav-item" data-tab="templates">
+        <i class="fas fa-images"></i>
+        <span>Templates: Gerador de Chassi</span>
+      </a>
+      <a href="#" class="nav-item" data-tab="docs-uber99">
+        <i class="fas fa-file-pdf"></i>
+        <span>Docs Uber e 99</span>
+      </a>
+
+      <span class="nav-label">SISTEMA</span>
+      <a href="#" class="nav-item" data-tab="ajustes">
+        <i class="fas fa-sliders"></i>
+        <span>Ajustes do Sistema</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="user-avatar">A</div>
+        <div class="user-info">
+          <span class="user-name">Admin</span>
+          <span class="user-status"><span class="status-dot"></span>Super Admin</span>
+        </div>
+      </div>
+      <button class="btn-logout" id="btnLogout">
+        <i class="fas fa-right-from-bracket"></i>
+        <span>Sair</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- ===== MAIN CONTENT ===== -->
+  <main class="main-content" id="mainContent">
+
+    <!-- ===== DASHBOARD ===== -->
+    <section class="tab-section active" id="tab-dashboard">
+      <header class="page-header">
+        <div class="header-title">
+          <h1>Visão <span class="highlight-cyan">Geral</span></h1>
+          <p>Central de comando do seu SaaS em tempo real.</p>
+        </div>
+        <div class="header-actions">
+          <span class="live-indicator"><span class="live-dot"></span> AO VIVO</span>
+          <button class="btn-refresh" id="btnRefresh">
+            <i class="fas fa-rotate"></i>
+            <span>Atualizar</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- ===== AÇÕES RÁPIDAS ===== -->
+      <div class="quick-actions">
+        <button class="quick-action" data-tab-link="usuarios">
+          <span class="quick-icon cyan"><i class="fas fa-user-plus"></i></span>
+          <span class="quick-info">
+            <strong>Adicionar Novo Cliente</strong>
+            <small>Criar acesso para um novo usuário</small>
+          </span>
+        </button>
+        <button class="quick-action" data-tab-link="ajustes">
+          <span class="quick-icon pink"><i class="fas fa-palette"></i></span>
+          <span class="quick-info">
+            <strong>Alterar Layout do Painel</strong>
+            <small>Personalizar a interface dos clientes</small>
+          </span>
+        </button>
+        <button class="quick-action" data-tab-link="modulos">
+          <span class="quick-icon green"><i class="fas fa-cube"></i></span>
+          <span class="quick-info">
+            <strong>Novo Serviço no Catálogo</strong>
+            <small>Adicionar um serviço ao painel</small>
+          </span>
+        </button>
+      </div>
+
+      <!-- ===== CARDS DE RESUMO ===== -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon cyan"><i class="fas fa-users"></i></div>
+          <div class="stat-info">
+            <span class="stat-label">Clientes Ativos</span>
+            <span class="stat-value" id="statUsers">1.284</span>
+            <span class="stat-change up"><i class="fas fa-arrow-up"></i> 12% este mês</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon pink"><i class="fas fa-crown"></i></div>
+          <div class="stat-info">
+            <span class="stat-label">Planos Ativos</span>
+            <span class="stat-value" id="statPlans">856</span>
+            <span class="stat-change up"><i class="fas fa-arrow-up"></i> 8% este mês</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon green"><i class="fas fa-dollar-sign"></i></div>
+          <div class="stat-info">
+            <span class="stat-label">Receita Mensal Estimada</span>
+            <span class="stat-value" id="statRevenue">R$ 48.250</span>
+            <span class="stat-change up"><i class="fas fa-arrow-up"></i> 15% este mês</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon orange"><i class="fas fa-cubes"></i></div>
+          <div class="stat-info">
+            <span class="stat-label">Serviços Cadastrados</span>
+            <span class="stat-value" id="statServices">7</span>
+            <span class="stat-change up"><i class="fas fa-arrow-up"></i> 2 novos hoje</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== GRÁFICO E ATIVIDADE ===== -->
+      <div class="dashboard-grid">
+        <div class="panel">
+          <div class="panel-header">
+            <h3><i class="fas fa-chart-line"></i> Receita dos Últimos 7 Dias</h3>
+            <span class="panel-period">Semanal</span>
+          </div>
+          <div class="chart-container" id="revenueChart">
+            <div class="chart-bars" id="chartBars"></div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header">
+            <h3><i class="fas fa-bolt"></i> Atividade Recente</h3>
+            <a href="#" class="panel-link" data-tab-link="logs">Ver todos</a>
+          </div>
+          <div class="activity-list" id="activityList">
+            <!-- Populado via JS -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== GESTÃO DE CLIENTES ===== -->
+    <section class="tab-section" id="tab-usuarios">
+      <header class="page-header">
+        <div class="header-title">
+          <h1>Gestão de <span class="highlight-cyan">Clientes</span></h1>
+          <p>Gerencie contas, permissões e status dos seus clientes.</p>
+        </div>
+        <div class="header-actions">
+          <button class="btn-secondary cms-btn-save" id="btnSaveAllUsers">
+            <i class="fas fa-cloud-arrow-up"></i> Salvar e Sincronizar
+          </button>
+          <button class="btn-primary" id="btnAddUser">
+            <i class="fas fa-user-plus"></i>
+            <span>Novo Cliente</span>
+          </button>
+        </div>
+      </header>
+
+      <div class="panel">
+        <div class="panel-header">
+          <h3><i class="fas fa-users"></i> Lista de Clientes</h3>
+          <div class="search-box">
+            <i class="fas fa-magnifying-glass"></i>
+            <input type="text" id="userSearch" placeholder="Buscar cliente...">
+          </div>
+        </div>
+        <div class="table-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Cliente</th>
+                <th>Email</th>
+                <th>Plano</th>
+                <th>Status</th>
+                <th>Último Acesso</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="usersTableBody">
+              <!-- Populado via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== ACOMPANHAMENTO (MEDIDOR DE CONSULTAS) ===== -->
+    <section class="tab-section" id="tab-acompanhamento">
+      <header class="page-header">
+        <div class="header-title">
+          <h1>Acompanhamento <span class="highlight-cyan">de Consultas</span></h1>
+          <p>Medidor dinâmico do consumo de consultas de todos os clientes em tempo real.</p>
+        </div>
+        <div class="header-actions">
+          <span class="live-indicator"><span class="live-dot"></span> AO VIVO</span>
+          <button class="btn-refresh" id="btnRefreshAcompanhamento">
+            <i class="fas fa-rotate"></i>
+            <span>Atualizar</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- ===== MEDIDOR DINÂMICO GERAL ===== -->
+      <div class="panel">
+        <div class="panel-header">
+          <h3><i class="fas fa-gauge-high"></i> Consumo Global de Consultas</h3>
+          <span class="panel-period" id="acompGlobalLabel">Carregando...</span>
+        </div>
+        <div class="acomp-global-meter">
+          <div class="acomp-global-bar">
+            <div class="acomp-global-fill" id="acompGlobalFill" style="width:0%"></div>
+          </div>
+          <div class="acomp-global-info">
+            <span id="acompGlobalRealizadas">0</span> consultas realizadas de
+            <span id="acompGlobalPermitidas">0</span> permitidas ·
+            <strong id="acompGlobalRestantes">0</strong> restantes
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== TABELA POR CLIENTE ===== -->
+      <div class="panel">
+        <div class="panel-header">
+          <h3><i class="fas fa-users"></i> Consumo por Cliente</h3>
+          <div class="search-box">
+            <i class="fas fa-magnifying-glass"></i>
+            <input type="text" id="acompSearch" placeholder="Buscar cliente...">
+          </div>
+        </div>
+        <div class="table-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Cliente</th>
+                <th>Plano</th>
+                <th>Consultas Realizadas</th>
+                <th>Consultas Restantes</th>
+                <th>Status</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="acompTableBody">
+              <!-- Populado via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== PLANOS E VENDAS ===== -->
+    <section class="tab-section" id="tab-planos">
+      <header class="page-header">
+        <div class="header-title">
+          <h1>Planos e <span class="highlight-pink">Vendas</span></h1>
+          <p>Defina os pacotes vendidos para acessar o painel.</p>
+        </div>
+        <div class="header-actions">
+          <button class="btn-secondary cms-btn-save" id="btnSaveAllPlans">
+            <i class="fas fa-cloud-arrow-up"></i> Salvar e Sincronizar
+          </button>
+          <button class="btn-primary" id="btnAddPlan">
+            <i class="fas fa-plus"></i>
+            <span>Novo Plano</span>
+          </button>
+        </div>
+      </header>
+
+      <div class="plans-grid" id="plansGrid">
+        <!-- Populado via JS -->
+      </div>
+    </section>
+
+    <!-- ===== CATÁLOGO DE SERVIÇOS (CMS HEADLESS) ===== -->
+    <section class="tab-section" id="tab-modulos">
+      <header class="page-header">
+        <div class="header-title">
+          <h1>Catálogo de <span class="highlight-pink">Serviços</span></h1>
+          <p>Gerencie categorias e serviços em uma única interface, com sincronização em tempo real.</p>
+        </div>
+        <div class="header-actions">
+          <span class="live-indicator"><span class="live-dot"></span> CMS ATIVO</span>
+          <button class="btn-primary cms-btn-add" id="btnOpenModal">
+            <i class="fas fa-plus"></i>
+            <span>Adicionar Serviço</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- ===== CONTADOR ===== -->
+      <div class="cms-toolbar">
+        <span class="cms-count" id="cmsCount">0 serviços</span>
+        <div class="cms-toolbar-actions">
+          <button class="btn-secondary cms-btn-export" id="btnCmsExportJson" title="Baixar o catálogo de serviços como arquivo JSON">
+            <i class="fas fa-file-export"></i> Exportar JSON
+          </button>
+          <button class="btn-secondary cms-btn-export" id="btnCmsExportCsv" title="Baixar o catálogo de serviços como arquivo CSV">
+            <i class="fas fa-file-csv"></i> Exportar CSV
+          </button>
+          <button class="btn-secondary cms-btn-restore" id="btnCmsRestoreBackup" title="Restaurar o catálogo a partir do backup automático">
+            <i class="fas fa-undo-alt"></i> Restaurar Backup
+          </button>
+          <button class="btn-secondary cms-btn-save" id="btnSaveModules">
+            <i class="fas fa-cloud-arrow-up"></i> Salvar e Sincronizar
+          </button>
+          <button class="btn-secondary cms-btn-reset" id="btnResetModules">
+            <i class="fas fa-rotate-left"></i> Restaurar
+          </button>
+        </div>
+        <small class="cms-hint cms-backup-hint" id="cmsBackupHint"></small>
+      </div>
+
+      <!-- ===== INTERFACE ÚNICA: CATEGORIAS EXPANSÍVEIS ===== -->
+      <div class="cms-modules" id="cmsModules">
+        <!-- Populado via JS -->
+      </div>
+
+      <!-- ===== MODAL ÚNICO: ADICIONAR / EDITAR SERVIÇO ===== -->
+      <div class="cms-modal-overlay" id="cmsModalOverlay">
+        <div class="cms-modal">
+          <div class="cms-modal-head">
+            <h3 id="cmsModalTitle"><i class="fas fa-plus-circle"></i> Novo Serviço</h3>
+            <button class="cms-modal-close" id="cmsModalClose" title="Fechar">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+          <div class="cms-modal-body">
+            <div class="cms-field">
+              <label>1. Categoria</label>
+              <div class="cms-cat-select-row">
+                <select id="cmsCardCategory" class="cms-select">
+                  <option value="">— Selecione uma categoria —</option>
+                </select>
+                <input type="text" id="cmsCardNewCat" placeholder="ou nova categoria..." style="display:none;">
+              </div>
+              <label class="cms-check-inline">
+                <input type="checkbox" id="cmsCardNewCatToggle">
+                <span>Criar nova categoria</span>
+              </label>
+            </div>
+            <div class="cms-field">
+              <label>2. Nome do Serviço</label>
+              <input type="text" id="cmsCardTitle" placeholder="Ex: Consulta CNH">
+            </div>
+            <div class="cms-field">
+              <label>3. Status</label>
+              <div class="cms-status-switch">
+                <label class="switch">
+                  <input type="checkbox" id="cmsCardStatus" checked>
+                  <span class="slider"></span>
+                </label>
+                <span class="cms-status-label" id="cmsCardStatusLabel">Ativo</span>
+              </div>
+            </div>
+            <div class="cms-field">
+              <label>4. Aba no Menu Lateral <em class="cms-opt">(opcional)</em></label>
+              <input type="text" id="cmsCardSidebar" placeholder="Ex: Consultas, Ferramentas, Geradores...">
+              <small class="cms-field-hint">Se preenchido, cria ou atualiza a aba correspondente no menu lateral do painel do usuário automaticamente.</small>
+            </div>
+          </div>
+          <div class="cms-modal-foot">
+            <button class="btn-secondary" id="cmsModalCancel">Cancelar</button>
+            <button class="btn-primary" id="cmsModalConfirm">
+              <i class="fas fa-check"></i> <span id="cmsModalConfirmLabel">Adicionar</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ===== TEMPLATES: GERADOR DE CHASSI ===== -->
+    <section class="tab-section" id="tab-templates">
+      <header class="page-header">
+        <div class="header-title">
+          <h1>Templates: <span class="highlight-cyan">Gerador de Chassi</span></h1>
+          <p>Gerencie as imagens base usadas para fundir o texto (VIN) no gerador de chassi do painel do usuário.</p>
+        </div>
+        <div class="header-actions">
+          <span class="live-indicator"><span class="live-dot"></span> BANCO DE IMAGENS</span>
+        </div>
+      </header>
+
+      <!-- ===== FORMULÁRIO DE UPLOAD ===== -->
+      <div class="cms-toolbar">
+        <span class="cms-count" id="chassiCount">0 templates</span>
+        <div class="cms-toolbar-actions">
+          <button class="btn-secondary cms-btn-export" id="btnChassiExportJson" title="Baixar os templates salvos como arquivo JSON">
+            <i class="fas fa-file-export"></i> Exportar Templates (JSON)
+          </button>
+          <button class="btn-secondary cms-btn-restore" id="btnChassiRestoreBackup" title="Restaurar os templates a partir de um arquivo JSON">
+            <i class="fas fa-undo-alt"></i> Restaurar Backup de Templates
+          </button>
+          <input type="file" id="chassiRestoreInput" accept=".json,application/json" style="display:none;" />
+          <button class="btn-secondary cms-btn-reset" id="btnResetChassiTemplates">
+            <i class="fas fa-rotate-left"></i> Restaurar
+          </button>
+        </div>
+      </div>
+
+      <div class="chassi-upload-card">
+        <div class="chassi-upload-title">
+          <i class="fas fa-image"></i>
+          <h3>Adicionar Imagem Base</h3>
+        </div>
+        <p class="chassi-upload-desc">Envie uma imagem (JPG/PNG) que servirá de fundo para a gravação do chassi (VIN).</p>
+        <div class="chassi-upload-row">
+          <input type="file" id="chassiFileInput" accept="image/*" />
+          <button class="btn-primary" id="btnSaveChassiTemplate">
+            <i class="fas fa-save"></i> Salvar Template Base
+          </button>
+        </div>
+      </div>
+
+      <!-- ===== LISTAGEM DAS IMAGENS BASE ===== -->
+      <div class="chassi-templates-section">
+        <div class="chassi-templates-title">
+          <i class="fas fa-layer-group"></i>
+          <h3>Imagens Base Salvas</h3>
+        </div>
+        <div class="chassi-templates-grid" id="chassiTemplatesGrid">
+          <!-- Populado via JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== DOCS UBER E 99 (GERADOR DE PDF) ===== -->
+    <section class="tab-section" id="tab-docs-uber99">
+      <header class="page-header">
+        <div class="header-title">
+          <h1>Docs <span class="highlight-cyan">Uber e 99</span></h1>
+          <p>Envie os templates PDF em branco (CRLV) da Uber e da 99. O sistema sobrepõe os dados reais do veículo (Placa, Chassi, Renavam, etc.) sobre o template quando o cliente gera o documento.</p>
+        </div>
+        <div class="header-actions">
+          <span class="live-indicator"><span class="live-dot"></span> GERADOR DE PDF</span>
+        </div>
+      </header>
+
+      <!-- ===== STATUS DOS TEMPLATES ===== -->
+      <div class="docs-status-grid" id="docsStatusGrid">
+        <div class="docs-status-card" id="docsStatusUber">
+          <div class="docs-status-icon"><i class="fab fa-uber"></i></div>
+          <div class="docs-status-info">
+            <h3>Template Uber</h3>
+            <p class="docs-status-msg">Verificando...</p>
+          </div>
+        </div>
+        <div class="docs-status-card" id="docsStatus99">
+          <div class="docs-status-icon"><i class="fas fa-taxi"></i></div>
+          <div class="docs-status-info">
+            <h3>Template 99</h3>
+            <p class="docs-status-msg">Verificando...</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== FORMULÁRIO DE UPLOAD ===== -->
+      <div class="docs-upload-card">
+        <div class="docs-upload-title">
+          <i class="fas fa-file-pdf"></i>
+          <h3>Enviar Template PDF</h3>
+        </div>
+        <p class="docs-upload-desc">Selecione o modelo (Uber ou 99) e envie o arquivo PDF em branco do CRLV. O arquivo será salvo no servidor e usado automaticamente na geração dos documentos.</p>
+        <div class="docs-upload-row">
+          <select id="docsTemplateModelo">
+            <option value="uber">Uber</option>
+            <option value="99">99</option>
+          </select>
+          <input type="file" id="docsTemplateFile" accept="application/pdf,.pdf" />
+          <button class="btn-primary" id="btnDocsUploadTemplate">
+            <i class="fas fa-upload"></i> Enviar Template
+          </button>
+        </div>
+        <div class="docs-feedback" id="docsUploadFeedback"></div>
+        <div class="docs-upload-hint">
+          <i class="fas fa-info-circle"></i>
+          <span>O template deve ser um PDF com campos AcroForm (Text Fields) nomeados. Os dados do veículo são injetados automaticamente nos campos do formulário via <code>form.getTextField(nome).setText(valor)</code>.</span>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ===== AJUSTES DO SISTEMA ===== -->
+    <section class="tab-section" id="tab-ajustes">
+      <header class="page-header">
+        <div class="header-title">
+          <h1>Ajustes do <span class="highlight-cyan">Sistema</span></h1>
+          <p>Configure os textos globais, a identidade visual e as preferências do painel.</p>
+        </div>
+      </header>
+
+      <!-- ===== BLOCO A: TEXTOS GLOBAIS ===== -->
+      <div class="panel ajustes-panel">
+        <div class="panel-header">
+          <h3><i class="fas fa-font"></i> Bloco A · Textos Globais do Painel</h3>
+        </div>
+        <div class="builder-body">
+          <div class="builder-field">
+            <label>Nome do Painel (Logo)</label>
+            <input type="text" id="layoutPanelName" placeholder="Ex: Espaço Uber">
+            <small>Texto exibido na logo do painel do usuário.</small>
+          </div>
+          <div class="builder-field">
+            <label>Nome do Usuário Logado</label>
+            <input type="text" id="layoutUserName" placeholder="Ex: FREDÃO">
+            <small>Nome exibido na saudação e no rodapé da sidebar.</small>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== BLOCO B: IDENTIDADE VISUAL E CONFIGURAÇÕES BÁSICAS ===== -->
+      <div class="panel ajustes-panel">
+        <div class="panel-header">
+          <h3><i class="fas fa-palette"></i> Bloco B · Identidade Visual e Configurações Básicas</h3>
+        </div>
+        <div class="ajustes-grid">
+          <div class="builder-body">
+            <div class="builder-field">
+              <label>Largura da Sidebar (px)</label>
+              <input type="number" id="layoutSidebarWidth" min="200" max="360" placeholder="260">
+              <small>Largura do menu lateral em pixels.</small>
+            </div>
+            <div class="builder-field">
+              <label>Gap do Grid de Cards (px)</label>
+              <input type="number" id="layoutGridGap" min="8" max="60" placeholder="20">
+              <small>Espaçamento entre os cards.</small>
+            </div>
+            <div class="builder-field">
+              <label>Border Radius dos Cards (px)</label>
+              <input type="number" id="layoutRadius" min="4" max="40" placeholder="16">
+              <small>Arredondamento dos cantos.</small>
+            </div>
+            <div class="builder-field">
+              <label>Cor de Destaque (Neon)</label>
+              <div class="builder-color-row">
+                <input type="color" id="layoutAccentColor" value="#00f2fe">
+                <input type="text" id="layoutAccentColorHex" placeholder="#00f2fe">
+              </div>
+              <small>Cor primária de destaque (brilho Neon).</small>
+            </div>
+          </div>
+
+          <div class="settings-list">
+            <div class="setting-item">
+              <div class="setting-info">
+                <span class="setting-name">Nome do Sistema</span>
+                <span class="setting-desc">Nome exibido no painel</span>
+              </div>
+              <input type="text" class="setting-input" value="Espaço Uber" id="settingName">
+            </div>
+            <div class="setting-item">
+              <div class="setting-info">
+                <span class="setting-name">Idioma</span>
+                <span class="setting-desc">Idioma padrão da interface</span>
+              </div>
+              <select class="setting-select" id="settingLang">
+                <option value="pt-BR" selected>Português (Brasil)</option>
+                <option value="en">English</option>
+                <option value="es">Español</option>
+              </select>
+            </div>
+            <div class="setting-item">
+              <div class="setting-info">
+                <span class="setting-name">Fuso Horário</span>
+                <span class="setting-desc">Fuso horário padrão</span>
+              </div>
+              <select class="setting-select" id="settingTz">
+                <option value="America/Sao_Paulo" selected>America/Sao_Paulo (UTC-3)</option>
+                <option value="America/New_York">America/New_York (UTC-5)</option>
+                <option value="Europe/Lisbon">Europe/Lisbon (UTC+0)</option>
+              </select>
+            </div>
+            <div class="setting-item">
+              <div class="setting-info">
+                <span class="setting-name">Alertas por Email</span>
+                <span class="setting-desc">Receber alertas importantes</span>
+              </div>
+              <label class="switch">
+                <input type="checkbox" checked id="settingEmail">
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="setting-item">
+              <div class="setting-info">
+                <span class="setting-name">Notificações Push</span>
+                <span class="setting-desc">Notificações em tempo real</span>
+              </div>
+              <label class="switch">
+                <input type="checkbox" checked id="settingPush">
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="setting-item">
+              <div class="setting-info">
+                <span class="setting-name">Relatório Semanal</span>
+                <span class="setting-desc">Resumo semanal por email</span>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="settingReport">
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="setting-item">
+              <div class="setting-info">
+                <span class="setting-name">Facial AI</span>
+                <span class="setting-desc">Exibir módulo de reconhecimento facial</span>
+              </div>
+              <label class="switch">
+                <input type="checkbox" checked id="settingFacialAI">
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="setting-item">
+              <div class="setting-info">
+                <span class="setting-name">Geradores</span>
+                <span class="setting-desc">Exibir módulo de geradores</span>
+              </div>
+              <label class="switch">
+                <input type="checkbox" checked id="settingGenerators">
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="setting-item">
+              <div class="setting-info">
+                <span class="setting-name">Checkers</span>
+                <span class="setting-desc">Exibir módulo de verificadores</span>
+              </div>
+              <label class="switch">
+                <input type="checkbox" checked id="settingCheckers">
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="setting-item">
+              <div class="setting-info">
+                <span class="setting-name">Ferramentas</span>
+                <span class="setting-desc">Exibir módulo de ferramentas</span>
+              </div>
+              <label class="switch">
+                <input type="checkbox" checked id="settingTools">
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="setting-item">
+              <div class="setting-info">
+                <span class="setting-name">Modo Manutenção</span>
+                <span class="setting-desc">Bloquear acesso ao painel do cliente</span>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="settingMaintenance">
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="setting-item">
+              <div class="setting-info">
+                <span class="setting-name">Mensagem de Manutenção</span>
+                <span class="setting-desc">Texto exibido aos clientes</span>
+              </div>
+              <input type="text" class="setting-input" id="settingMaintenanceMsg" placeholder="Sistema em manutenção. Volte em breve!">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== BLOCO C: INTEGRAÇÃO LOSDADOS ===== -->
+      <div class="panel ajustes-panel">
+        <div class="panel-header">
+          <h3><i class="fas fa-database"></i> Bloco C · Integração LosDados (Consultas)</h3>
+        </div>
+        <div class="builder-body">
+          <div class="builder-field">
+            <label>API Key da LosDados</label>
+            <div class="builder-color-row">
+              <input type="password" id="losdadosApiKey" placeholder="Cole aqui a sua API Key da LosDados" autocomplete="off">
+              <button type="button" class="btn-secondary" id="btnToggleLosdadosKey" title="Mostrar/ocultar chave">
+                <i class="fas fa-eye"></i>
+              </button>
+            </div>
+            <small>Chave usada nas consultas de CPF, CNH, Placa e Telefone. Fica armazenada com segurança no servidor e é injetada automaticamente no header <code>X-API-Key</code>.</small>
+          </div>
+          <div class="builder-field">
+            <button class="btn-primary" id="btnSaveLosdadosKey">
+              <i class="fas fa-save"></i>
+              <span>Salvar Configuração</span>
+            </button>
+            <span id="losdadosKeyStatus" class="losdados-status"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== AÇÕES ===== -->
+      <div class="ajustes-actions">
+        <button class="btn-primary" id="btnSaveSettings">
+          <i class="fas fa-check"></i>
+          <span>Salvar Configurações</span>
+        </button>
+        <button class="btn-primary" id="btnSaveLayout">
+          <i class="fas fa-save"></i> Salvar e Aplicar Layout
+        </button>
+        <button class="btn-secondary" id="btnResetLayout">
+          <i class="fas fa-rotate-left"></i> Restaurar Padrão
+        </button>
+      </div>
+    </section>
+
+    <!-- ===== TRANSAÇÕES (ACESSO VIA DASHBOARD) ===== -->
+    <section class="tab-section" id="tab-transacoes">
+      <header class="page-header">
+        <div class="header-title">
+          <h1>Histórico de <span class="highlight-cyan">Transações</span></h1>
+          <p>Registro completo de pagamentos e renovações.</p>
+        </div>
+      </header>
+
+      <div class="panel">
+        <div class="panel-header">
+          <h3><i class="fas fa-credit-card"></i> Transações Recentes</h3>
+          <div class="filter-tabs">
+            <button class="filter-btn active" data-filter="all">Todas</button>
+            <button class="filter-btn" data-filter="pagamento">Pagamentos</button>
+            <button class="filter-btn" data-filter="renovacao">Renovações</button>
+            <button class="filter-btn" data-filter="reembolso">Reembolsos</button>
+          </div>
+        </div>
+        <div class="table-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Usuário</th>
+                <th>Tipo</th>
+                <th>Valor</th>
+                <th>Data</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="transactionsTableBody">
+              <!-- Populado via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== LOGS (ACESSO VIA DASHBOARD) ===== -->
+    <section class="tab-section" id="tab-logs">
+      <header class="page-header">
+        <div class="header-title">
+          <h1>Logs do <span class="highlight-cyan">Sistema</span></h1>
+          <p>Registro de eventos e atividades do sistema.</p>
+        </div>
+        <button class="btn-refresh" id="btnClearLogs">
+          <i class="fas fa-trash"></i>
+          <span>Limpar Logs</span>
+        </button>
+      </header>
+
+      <div class="panel">
+        <div class="panel-header">
+          <h3><i class="fas fa-scroll"></i> Registro de Eventos</h3>
+          <div class="log-levels">
+            <span class="log-filter active" data-level="all">Todos</span>
+            <span class="log-filter" data-level="info">Info</span>
+            <span class="log-filter" data-level="warn">Avisos</span>
+            <span class="log-filter" data-level="error">Erros</span>
+          </div>
+        </div>
+        <div class="log-list" id="logList">
+          <!-- Populado via JS -->
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ===== MODAL ===== -->
+  <div class="modal" id="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="modalTitle">Título</h3>
+        <button class="modal-close" id="modalClose"><i class="fas fa-xmark"></i></button>
+      </div>
+      <div class="modal-body" id="modalBody">
+        <!-- Conteúdo dinâmico -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== TOAST ===== -->
+  <div class="toast" id="toast">
+    <div class="toast-icon"><i class="fas fa-circle-check"></i></div>
+    <div class="toast-content">
+      <strong id="toastTitle">Sucesso</strong>
+      <span id="toastMessage">Operação concluída.</span>
+    </div>
+  </div>
+
+  <script src="config-store.js"></script>
+  <script src="admin.js"></script>
+  <script src="cms-admin.js"></script>
+</body>
+</html>
