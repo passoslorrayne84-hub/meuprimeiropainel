@@ -1,2 +1,5 @@
-test  
+test
 .aider*
+server.log
+server-err.log
+*.log

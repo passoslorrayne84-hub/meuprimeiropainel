@@ -285,9 +285,59 @@ function cmsEnsureVitalServices() {
   });
 }
 
+// Salva o catálogo no servidor (persistência permanente em cms-modules.json),
+// para que as alterações sobrevivam a atualizações/reinícios do servidor e
+// sejam compartilhadas entre navegadores/dispositivos.
+function cmsSaveToServer(modules) {
+  try {
+    // Envia também a lista de categorias removidas, para que a remoção
+    // deliberada de uma categoria persista no servidor e não seja recriada
+    // pelo "merge de garantia" ao carregar em outro navegador/dispositivo.
+    const payload = {
+      categorias: (modules && modules.categorias) || (cmsModules && cmsModules.categorias) || [],
+      removed: cmsGetRemovedCats()
+    };
+    fetch('/api/cms/modules', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    }).then(r => r.json()).then(d => {
+      if (d && d.ok) {
+        console.log('[CMS] ✅ Catálogo salvo no servidor.');
+      } else {
+        console.warn('[CMS] ⚠️ Servidor não confirmou o salvamento do catálogo.', d);
+      }
+    }).catch(e => {
+      console.warn('[CMS] ⚠️ Não foi possível salvar no servidor (offline?).', e && e.message ? e.message : e);
+    });
+  } catch (e) {
+    console.warn('[CMS] ⚠️ Falha ao salvar no servidor.', e);
+  }
+}
+
+// Busca o catálogo salvo no servidor. Retorna null se não existir/falhar.
+// Também restaura a lista de categorias removidas persistida no servidor,
+// para que remoções deliberadas não sejam recriadas pelo merge de garantia.
+function cmsFetchFromServer() {
+  return fetch('/api/cms/modules')
+    .then(r => r.ok ? r.json() : null)
+    .then(d => {
+      if (!(d && d.ok && d.modules && Array.isArray(d.modules.categorias))) return null;
+      // Restaura a lista de categorias removidas (se o servidor a tiver).
+      if (Array.isArray(d.modules.removed)) {
+        cmsSetRemovedCats(d.modules.removed);
+      }
+      return d.modules;
+    })
+    .catch(() => null);
+}
+
 function cmsPersist() {
   try {
     localStorage.setItem(CMS_STORAGE_KEY, JSON.stringify(cmsModules));
+    // Persiste também no servidor (fire-and-forget) para garantir que as
+    // alterações fiquem salvas mesmo após reiniciar/atualizar o servidor.
+    cmsSaveToServer(cmsModules);
     // Notifica o painel do usuário (mesma aba) para atualização instantânea
     // das categorias na sidebar e da vitrine, sem necessidade de refresh.
     try {
@@ -960,5 +1010,23 @@ document.addEventListener('DOMContentLoaded', () => {
     cmsBackupAuto(cmsModules);
   }
   cmsUpdateBackupHint();
+
+  // ===== PERSISTÊNCIA NO SERVIDOR =====
+  // Ao abrir o painel admin, busca o catálogo salvo no servidor (cms-modules.json)
+  // como fonte de verdade. Se existir, aplica-o sobre o localStorage e re-renderiza,
+  // garantindo que as alterações feitas anteriormente sobrevivam a atualizações,
+  // reinícios do servidor e até mesmo à troca de navegador/dispositivo.
+  cmsFetchFromServer().then(srvModules => {
+    if (srvModules && Array.isArray(srvModules.categorias)) {
+      cmsModules = srvModules;
+      try {
+        localStorage.setItem(CMS_STORAGE_KEY, JSON.stringify(srvModules));
+      } catch (e) { /* storage cheio -> ignora */ }
+      cmsRecomputeIds();
+      cmsRenderAll();
+      console.log('[CMS] ✅ Catálogo carregado do servidor (' + srvModules.categorias.length + ' categorias).');
+    }
+  });
+
   console.log('%c🧩 Gerenciador de Módulos (CMS) inicializado!', 'color: #fe0979; font-size: 13px; font-weight: bold;');
 });

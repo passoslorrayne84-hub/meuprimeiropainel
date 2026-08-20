@@ -375,6 +375,57 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // ===== ENDPOINTS: CATÁLOGO DE MÓDULOS DO CMS (PERSISTÊNCIA NO SERVIDOR) =====
+  // Gerencia o arquivo cms-modules.json (catálogo de categorias/serviços que
+  // o admin configura). Persistir no servidor garante que as alterações feitas
+  // no painel admin sobrevivam a atualizações/reinícios do servidor e sejam
+  // compartilhadas entre navegadores/dispositivos, sem depender do localStorage.
+  // GET  /api/cms/modules -> lê e retorna o catálogo salvo (404 se não existir).
+  // POST /api/cms/modules -> recebe o catálogo e sobrescreve o arquivo.
+  const CMS_MODULES_PATH = path.join(ROOT, 'cms-modules.json');
+
+  if (req.method === 'GET' && urlPath === '/api/cms/modules') {
+    try {
+      if (!fs.existsSync(CMS_MODULES_PATH)) {
+        res.writeHead(404, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end(JSON.stringify({ ok: false, erro: 'Catálogo de módulos ainda não salvo no servidor.' }));
+        return;
+      }
+      const conteudo = JSON.parse(fs.readFileSync(CMS_MODULES_PATH, 'utf8'));
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify({ ok: true, modules: conteudo }));
+    } catch (e) {
+      console.error('[CMS-SRV] ❌ Erro ao ler catálogo:', e && e.stack ? e.stack : e);
+      res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify({ ok: false, erro: 'Erro ao ler cms-modules.json: ' + (e && e.message ? e.message : 'erro desconhecido.') }));
+    }
+    return;
+  }
+
+  if (req.method === 'POST' && urlPath === '/api/cms/modules') {
+    console.log('[CMS-SRV] 📥 Endpoint /api/cms/modules ACESSADO (POST).');
+    let body = '';
+    req.on('data', (chunk) => { body += chunk; });
+    req.on('end', () => {
+      try {
+        const novo = JSON.parse(body || '{}');
+        if (!novo || typeof novo !== 'object' || !Array.isArray(novo.categorias)) {
+          throw new Error('Payload inválido: esperado { categorias: [...] }.');
+        }
+        // Salva permanentemente no arquivo (sobrescreve).
+        fs.writeFileSync(CMS_MODULES_PATH, JSON.stringify(novo, null, 2), 'utf8');
+        console.log('[CMS-SRV] ✅ Catálogo salvo em cms-modules.json (' + novo.categorias.length + ' categorias).');
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end(JSON.stringify({ ok: true, modules: novo }));
+      } catch (e) {
+        console.error('[CMS-SRV] ❌ Erro ao salvar catálogo:', e && e.stack ? e.stack : e);
+        res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end(JSON.stringify({ ok: false, erro: 'Erro ao salvar cms-modules.json: ' + (e && e.message ? e.message : 'erro desconhecido.') }));
+      }
+    });
+    return;
+  }
+
   // ===== INTEGRAÇÃO LOSDADOS (PROXY ISOLADO) =====
   // Roteia as requisições da API LosDados para o controller isolado.
   // O controller é a única ponte com a LosDados e injeta a API Key no

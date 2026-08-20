@@ -648,6 +648,43 @@ function cmsLoadModules() {
   return null;
 }
 
+// Busca o catálogo salvo no servidor (cms-modules.json). Retorna null se
+// não existir ou se a requisição falhar (ex.: servidor offline).
+function cmsFetchFromServer() {
+  return fetch('/api/cms/modules')
+    .then(r => r.ok ? r.json() : null)
+    .then(d => {
+      if (!(d && d.ok && d.modules && Array.isArray(d.modules.categorias))) return null;
+      // Restaura a lista de categorias removidas persistida no servidor, para
+      // que remoções deliberadas não sejam recriadas pelo merge de garantia.
+      if (Array.isArray(d.modules.removed)) {
+        try { localStorage.setItem(CMS_REMOVED_KEY, JSON.stringify(d.modules.removed)); } catch (e) {}
+      }
+      return d.modules;
+    })
+    .catch(() => null);
+}
+
+// Sincroniza o painel do usuário com o catálogo salvo no SERVIDOR (fonte de
+// verdade). Se o servidor tiver um catálogo, sobrescreve o localStorage e
+// re-renderiza — garantindo que tudo o que foi feito no painel admin persista
+// mesmo após atualizar/reiniciar o servidor ou trocar de navegador.
+function cmsSyncFromServer() {
+  return cmsFetchFromServer().then(srvModules => {
+    if (!srvModules || !Array.isArray(srvModules.categorias)) return false;
+    try {
+      localStorage.setItem(CMS_STORAGE_KEY, JSON.stringify(srvModules));
+    } catch (e) { /* storage cheio -> ignora */ }
+    renderCmsModules();
+    renderCmsSidebarCategories();
+    if (activeCmsCategory) {
+      renderCategoryTab(activeCmsCategory);
+    }
+    console.log('[CMS] ✅ Catálogo sincronizado do servidor (' + srvModules.categorias.length + ' categorias).');
+    return true;
+  }).catch(() => false);
+}
+
 // Gera o HTML de um card de serviço
 function cmsBuildServiceCard(srv, colorIndex) {
   const color = CMS_ICON_COLORS[colorIndex % CMS_ICON_COLORS.length];
@@ -3808,6 +3845,13 @@ document.addEventListener('DOMContentLoaded', () => {
     refreshCmsReactive();
   });
 
+  // ===== PERSISTÊNCIA NO SERVIDOR (FONTE DE VERDADE) =====
+  // Ao abrir o painel do usuário, busca o catálogo salvo no servidor
+  // (cms-modules.json) e aplica-o sobre o localStorage. Assim, tudo o que foi
+  // feito no painel admin persiste mesmo após atualizar/reiniciar o servidor
+  // ou trocar de navegador/dispositivo — sem precisar salvar de novo.
+  cmsSyncFromServer();
+
   // POLLING OTIMIZADO: verifica se o valor bruto do localStorage mudou
   // (operação barata, sem JSON.parse). Só faz o parse quando detecta mudança.
   // Garante que o painel do cliente SEMPRE reflita as mudanças do admin,
@@ -3817,6 +3861,8 @@ document.addEventListener('DOMContentLoaded', () => {
   let lastRawCms = localStorage.getItem(CMS_STORAGE_KEY);
   let lastRawPlans = localStorage.getItem(PLANS_STORAGE_KEY);
   let lastRawSidebar = localStorage.getItem(SIDEBAR_MENU_KEY);
+  // Controle de frequência do polling do catálogo no servidor (fonte de verdade).
+  let lastServerCmsCheck = 0;
   setInterval(() => {
     if (typeof ConfigStore === 'undefined') return;
     const raw = localStorage.getItem(ConfigStore.STORAGE_KEY);
@@ -3852,6 +3898,13 @@ document.addEventListener('DOMContentLoaded', () => {
     if (rawSidebar !== lastRawSidebar) {
       lastRawSidebar = rawSidebar;
       renderDynamicSidebar();
+    }
+    // Polling do catálogo no SERVIDOR (fonte de verdade). A cada ~10s verifica
+    // se o catálogo salvo no servidor mudou (ex.: alterado em outro navegador/
+    // dispositivo) e, se sim, aplica-o no painel do usuário.
+    if (Date.now() - lastServerCmsCheck > 10000) {
+      lastServerCmsCheck = Date.now();
+      cmsSyncFromServer();
     }
   }, 2000);
 
