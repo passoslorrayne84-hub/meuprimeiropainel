@@ -11,6 +11,67 @@
 /* ===== CONSTANTES ===== */
 const CMS_STORAGE_KEY = 'FredContas_MasterModules';
 
+// Chave que registra categorias REMOVIDAS deliberadamente pelo admin.
+// O merge de garantia (admin e painel do usuário) respeita esta lista e
+// NÃO recria categorias que foram excluídas de propósito, permitindo que
+// a remoção de uma categoria (ex.: "Fotos & Facial") reflita de verdade
+// no painel do usuário sem que ela volte sozinha.
+const CMS_REMOVED_KEY = 'FredContas_MasterModules_removed';
+
+// Lê a lista de categorias removidas (array de { id, nome }).
+function cmsGetRemovedCats() {
+  try {
+    const raw = localStorage.getItem(CMS_REMOVED_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) return parsed;
+    }
+  } catch (e) {
+    console.warn('[CMS] Falha ao ler categorias removidas.', e);
+  }
+  return [];
+}
+
+// Persiste a lista de categorias removidas.
+function cmsSetRemovedCats(list) {
+  try {
+    localStorage.setItem(CMS_REMOVED_KEY, JSON.stringify(list));
+  } catch (e) {
+    console.warn('[CMS] Falha ao salvar categorias removidas.', e);
+  }
+}
+
+// Marca uma categoria como removida (por id e nome normalizado).
+function cmsMarkCatRemoved(id, nome) {
+  const list = cmsGetRemovedCats();
+  const norm = (t) => String(t || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  if (!list.some(r => (id && r.id === id) || (nome && norm(r.nome) === norm(nome)))) {
+    list.push({ id: id || '', nome: nome || '' });
+    cmsSetRemovedCats(list);
+  }
+}
+
+// Desmarca uma categoria como removida (usado ao recriar/restaurar).
+function cmsUnmarkCatRemoved(id, nome) {
+  const list = cmsGetRemovedCats();
+  const norm = (t) => String(t || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  const nova = list.filter(r =>
+    !(id && r.id === id) &&
+    !(nome && norm(r.nome) === norm(nome))
+  );
+  if (nova.length !== list.length) cmsSetRemovedCats(nova);
+}
+
+// Verifica se uma categoria (por id ou nome) está na lista de removidas.
+function cmsIsCatRemoved(id, nome) {
+  const list = cmsGetRemovedCats();
+  const norm = (t) => String(t || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  return list.some(r =>
+    (id && r.id && r.id === id) ||
+    (nome && r.nome && norm(r.nome) === norm(nome))
+  );
+}
+
 /* ===== DADOS PADRÃO (FALLBACK) ===== */
 // Catálogo completo com TODOS os serviços vitais do painel (Consultas CPF/CNH/
 // Placa/Telefone, Gerador de CRLV Uber/99, Gerador de CNH, Chassi, etc.).
@@ -198,6 +259,8 @@ function cmsEnsureVitalServices() {
   });
   defaults.forEach(defCat => {
     if (!defCat || !defCat.servicos || !Array.isArray(defCat.servicos)) return;
+    // Não recria categorias que foram removidas deliberadamente pelo admin.
+    if (cmsIsCatRemoved(defCat.id, defCat.nome)) return;
     const alvo = cmsModules.categorias.find(cat =>
       cat && (cat.id === defCat.id ||
         (defCat.nome && norm(cat.nome) === norm(defCat.nome)))
@@ -417,6 +480,9 @@ function cmsAddCategory(nome) {
   const cat = { id, nome: name, servicos: [] };
   cmsModules.categorias.push(cat);
   cmsExpandedCats[cat.id] = true;
+  // Se o admin recriar uma categoria que havia sido removida (mesmo nome),
+  // desmarca a remoção para que o merge de garantia volte a respeitá-la.
+  cmsUnmarkCatRemoved(id, name);
   cmsRenderAll();
   cmsPersist(); // persiste e dispara 'fred-modules-updated' (reatividade em tempo real)
   cmsBackupAuto(cmsModules);
@@ -445,6 +511,9 @@ function cmsDeleteCategory(id) {
   if (!confirm(`Excluir a categoria "${cat.nome}" e todos os seus serviços?`)) return;
   cmsModules.categorias = cmsModules.categorias.filter(c => c.id !== id);
   delete cmsExpandedCats[id];
+  // Registra a remoção para que o merge de garantia (admin e painel do
+  // usuário) NÃO recrie esta categoria automaticamente.
+  cmsMarkCatRemoved(id, cat.nome);
   cmsRecomputeIds();
   cmsRenderAll();
   cmsPersist(); // persiste e dispara 'fred-modules-updated'
@@ -624,6 +693,9 @@ function cmsReset() {
   if (!confirm('Restaurar os módulos padrão? As alterações atuais serão perdidas.')) return;
   cmsModules = JSON.parse(JSON.stringify(CMS_DEFAULT_MODULES));
   cmsExpandedCats = {};
+  // Restaurar os padrões também limpa o registro de categorias removidas,
+  // para que todas voltem a aparecer no painel do usuário.
+  try { localStorage.removeItem(CMS_REMOVED_KEY); } catch (e) { /* ignora */ }
   cmsRecomputeIds();
   cmsRenderAll();
   cmsPersist();

@@ -416,6 +416,29 @@ function hexToRgba(hex, alpha) {
    ============================================================ */
 const CMS_STORAGE_KEY = 'FredContas_MasterModules';
 
+// Chave que registra categorias REMOVIDAS deliberadamente pelo admin.
+// O merge de garantia abaixo respeita esta lista e NÃO recria categorias
+// que foram excluídas de propósito no painel admin (ex.: "Fotos & Facial"),
+// para que a remoção reflita de verdade no painel do usuário.
+const CMS_REMOVED_KEY = 'FredContas_MasterModules_removed';
+
+// Verifica se uma categoria (por id ou nome) foi removida deliberadamente.
+function cmsIsCatRemoved(id, nome) {
+  try {
+    const raw = localStorage.getItem(CMS_REMOVED_KEY);
+    if (!raw) return false;
+    const list = JSON.parse(raw);
+    if (!Array.isArray(list)) return false;
+    const norm = (t) => String(t || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    return list.some(r =>
+      (id && r.id && r.id === id) ||
+      (nome && r.nome && norm(r.nome) === norm(nome))
+    );
+  } catch (e) {
+    return false;
+  }
+}
+
 // Catálogo padrão (FALLBACK) com TODOS os serviços vitais do painel.
 // Usado quando o localStorage está vazio/ausente, garantindo que a tela
 // do usuário SEMPRE exiba Consultas (CPF/CNH/Telefone/Placa), Gerador de
@@ -573,6 +596,8 @@ function cmsLoadModules() {
 
     defaults.forEach(defCat => {
       if (!defCat || !defCat.servicos || !Array.isArray(defCat.servicos)) return;
+      // Não recria categorias que foram removidas deliberadamente no admin.
+      if (cmsIsCatRemoved(defCat.id, defCat.nome)) return;
 
       // Procura a categoria correspondente no storage (por id ou nome).
       const alvo = categorias.find(cat =>
