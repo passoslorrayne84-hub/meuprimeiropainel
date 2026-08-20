@@ -1,0 +1,1105 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Fred Contas - Editor Visual de Coordenadas da CNH">
+  <title>Fred Contas | Editor Visual CNH</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #0b0f1a;
+      color: #e6e9f2;
+      min-height: 100vh;
+      padding: 24px;
+    }
+
+    .container { max-width: 1400px; margin: 0 auto; }
+
+    /* ===== HEADER ===== */
+    .page-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .header-title h1 {
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+    }
+
+    .header-title h1 .highlight-cyan { color: #22d3ee; }
+
+    .header-title p {
+      color: #8b93a7;
+      font-size: 14px;
+      margin-top: 4px;
+    }
+
+    .header-actions { display: flex; gap: 12px; align-items: center; }
+
+    .live-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(34, 211, 238, 0.1);
+      border: 1px solid rgba(34, 211, 238, 0.3);
+      color: #22d3ee;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 8px 14px;
+      border-radius: 999px;
+    }
+
+    .live-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: #22d3ee;
+      box-shadow: 0 0 8px #22d3ee;
+      animation: pulse 1.6s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.35; }
+    }
+
+    .btn-refresh {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #161c2e;
+      border: 1px solid #2a3350;
+      color: #c6cde0;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 9px 16px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-refresh:hover { background: #1d2438; border-color: #3a4568; }
+
+    /* ===== LAYOUT 2 COLUNAS ===== */
+    .editor-layout {
+      display: grid;
+      grid-template-columns: 420px 1fr;
+      gap: 24px;
+      align-items: start;
+    }
+
+    /* ===== PAINEL DE CONTROLES ===== */
+    .controls-panel {
+      background: #121828;
+      border: 1px solid #232c45;
+      border-radius: 16px;
+      padding: 20px;
+      max-height: calc(100vh - 140px);
+      overflow-y: auto;
+    }
+
+    .controls-panel::-webkit-scrollbar { width: 8px; }
+    .controls-panel::-webkit-scrollbar-thumb { background: #2a3350; border-radius: 8px; }
+
+    .controls-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 18px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid #232c45;
+    }
+
+    .controls-header i { color: #22d3ee; font-size: 18px; }
+
+    .controls-header h2 { font-size: 16px; font-weight: 700; }
+
+    .controls-header small { display: block; color: #8b93a7; font-size: 12px; font-weight: 400; margin-top: 2px; }
+
+    .section-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: #5b6478;
+      margin: 16px 0 10px;
+    }
+
+    .section-label:first-child { margin-top: 0; }
+
+    /* ===== CAMPO COM SLIDER ===== */
+    .field-group { margin-bottom: 14px; }
+
+    .field-group:last-child { margin-bottom: 0; }
+
+    .field-label {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      font-weight: 600;
+      color: #aab3c7;
+      margin-bottom: 6px;
+    }
+
+    .field-label .field-key { color: #5b6478; font-family: monospace; font-size: 11px; }
+
+    .input-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .field-input {
+      width: 76px;
+      flex-shrink: 0;
+      background: #0d1322;
+      border: 1px solid #2a3350;
+      border-radius: 9px;
+      color: #e6e9f2;
+      font-size: 14px;
+      font-weight: 700;
+      padding: 8px 8px;
+      outline: none;
+      text-align: center;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .field-input:focus {
+      border-color: #22d3ee;
+      box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.15);
+    }
+
+    .field-input::-webkit-outer-spin-button,
+    .field-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+    .field-input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
+
+    .range-wrap { flex: 1; min-width: 0; }
+
+    .range-input {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 6px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #22d3ee, #6366f1);
+      outline: none;
+      cursor: pointer;
+    }
+
+    .range-input::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #ffffff;
+      border: 3px solid #22d3ee;
+      box-shadow: 0 2px 8px rgba(34, 211, 238, 0.4);
+      cursor: grab;
+      transition: transform 0.15s;
+    }
+
+    .range-input::-webkit-slider-thumb:hover { transform: scale(1.15); }
+    .range-input::-webkit-slider-thumb:active { cursor: grabbing; transform: scale(1.25); }
+
+    .range-input::-moz-range-thumb {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #ffffff;
+      border: 3px solid #22d3ee;
+      box-shadow: 0 2px 8px rgba(34, 211, 238, 0.4);
+      cursor: grab;
+    }
+
+    .range-input::-moz-range-track {
+      height: 6px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #22d3ee, #6366f1);
+    }
+
+    .range-minmax {
+      display: flex;
+      justify-content: space-between;
+      font-size: 10px;
+      color: #5b6478;
+      margin-top: 3px;
+      font-family: monospace;
+    }
+
+    .foto-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    /* ===== AÇÕES ===== */
+    .actions-bar {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 18px;
+      padding-top: 16px;
+      border-top: 1px solid #232c45;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      font-size: 14px;
+      font-weight: 700;
+      padding: 11px 20px;
+      border-radius: 11px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #22d3ee, #6366f1);
+      color: #0b0f1a;
+      box-shadow: 0 6px 18px rgba(34, 211, 238, 0.25);
+    }
+
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 8px 22px rgba(34, 211, 238, 0.35); }
+
+    .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+    .btn-secondary {
+      background: #161c2e;
+      border: 1px solid #2a3350;
+      color: #c6cde0;
+    }
+
+    .btn-secondary:hover { background: #1d2438; }
+
+    /* ===== PAINEL VISUAL ===== */
+    .preview-panel {
+      background: #121828;
+      border: 1px solid #232c45;
+      border-radius: 16px;
+      padding: 20px;
+      position: sticky;
+      top: 24px;
+    }
+
+    .preview-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .preview-header h2 {
+      font-size: 16px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .preview-header h2 i { color: #34d399; }
+
+    .preview-header .zoom-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .zoom-btn {
+      width: 30px; height: 30px;
+      display: flex; align-items: center; justify-content: center;
+      background: #161c2e;
+      border: 1px solid #2a3350;
+      color: #c6cde0;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+
+    .zoom-btn:hover { background: #1d2438; border-color: #3a4568; }
+
+    .zoom-value { font-size: 12px; color: #8b93a7; min-width: 44px; text-align: center; font-family: monospace; }
+
+    /* ===== UPLOAD DE FUNDO ===== */
+    .upload-bg {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+      padding: 12px 14px;
+      background: #141a2c;
+      border: 1px dashed #2a3350;
+      border-radius: 10px;
+    }
+
+    .upload-bg-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #c6cde0;
+      cursor: pointer;
+      transition: color 0.2s;
+    }
+
+    .upload-bg-label i { color: #34d399; }
+
+    .upload-bg-label:hover { color: #ffffff; }
+
+    .upload-bg-input {
+      display: none;
+    }
+
+    .preview-canvas-wrap {
+      position: relative;
+      width: 100%;
+      overflow: auto;
+      border-radius: 12px;
+      border: 1px solid #232c45;
+      background: #0d1322;
+      max-height: calc(100vh - 220px);
+    }
+
+    .preview-canvas {
+      position: relative;
+      margin: 0 auto;
+      /* Largura/altura definidas via JS conforme o zoom */
+    }
+
+    .preview-canvas img.bg {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+      pointer-events: none;
+      user-select: none;
+    }
+
+    /* ===== ELEMENTOS SOBREPOSTOS ===== */
+    .overlay-el {
+      position: absolute;
+      font-family: 'Inter', sans-serif;
+      font-weight: 700;
+      font-size: 11px;
+      color: #ffffff;
+      text-shadow: 0 0 3px rgba(0,0,0,0.9), 0 0 6px rgba(0,0,0,0.7);
+      white-space: nowrap;
+      pointer-events: none;
+      user-select: none;
+      line-height: 1;
+      transform: translateY(-50%);
+    }
+
+    .overlay-el.red { color: #ff5c5c; }
+
+    .overlay-el .tag {
+      display: inline-block;
+      font-size: 8px;
+      font-weight: 800;
+      letter-spacing: 0.4px;
+      text-transform: uppercase;
+      background: rgba(34, 211, 238, 0.85);
+      color: #0b0f1a;
+      padding: 1px 4px;
+      border-radius: 3px;
+      margin-right: 5px;
+      vertical-align: middle;
+      text-shadow: none;
+    }
+
+    .overlay-el.red .tag { background: rgba(255, 92, 92, 0.9); }
+
+    .overlay-photo {
+      position: absolute;
+      border: 2px dashed #34d399;
+      background: rgba(52, 211, 153, 0.15);
+      border-radius: 4px;
+      pointer-events: none;
+      user-select: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .overlay-photo .photo-label {
+      font-size: 9px;
+      font-weight: 800;
+      color: #34d399;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      text-shadow: 0 0 3px rgba(0,0,0,0.9);
+    }
+
+    /* ===== STATUS ===== */
+    .status-bar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 14px;
+      font-size: 13px;
+      color: #8b93a7;
+      min-height: 20px;
+    }
+
+    .status-bar .spinner {
+      width: 15px; height: 15px;
+      border: 2px solid rgba(34, 211, 238, 0.3);
+      border-top-color: #22d3ee;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      display: none;
+    }
+
+    .status-bar.loading .spinner { display: inline-block; }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .status-bar .ok { color: #34d399; }
+    .status-bar .err { color: #f87171; }
+
+    /* ===== RESPONSIVO ===== */
+    @media (max-width: 1024px) {
+      .editor-layout { grid-template-columns: 1fr; }
+      .preview-panel { position: static; }
+      .controls-panel { max-height: none; }
+    }
+
+    @media (max-width: 640px) {
+      body { padding: 16px 12px; }
+      .header-title h1 { font-size: 21px; }
+      .foto-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <!-- ===== HEADER ===== -->
+    <header class="page-header">
+      <div class="header-title">
+        <h1>Editor Visual <span class="highlight-cyan">CNH</span></h1>
+        <p>Arraste os sliders e veja os textos e a foto se moverem em tempo real sobre o documento.</p>
+      </div>
+      <div class="header-actions">
+        <span class="live-indicator"><span class="live-dot"></span> TEMPO REAL</span>
+        <button class="btn-refresh" id="btnRefresh">
+          <i class="fas fa-rotate"></i>
+          <span>Recarregar</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- ===== LAYOUT 2 COLUNAS ===== -->
+    <div class="editor-layout">
+
+      <!-- ===== COLUNA ESQUERDA: CONTROLES ===== -->
+      <div class="controls-panel">
+        <div class="controls-header">
+          <i class="fas fa-sliders"></i>
+          <div>
+            <h2>Controles de Posição</h2>
+            <small>Arraste as barras para mover os elementos</small>
+          </div>
+        </div>
+
+        <!-- EIXO X -->
+        <div class="section-label">Eixo X · Colunas (0 a 600)</div>
+
+        <div class="field-group">
+          <label class="field-label">
+            <span>Esquerda (Nome, Nasc, CPF, Nacionalidade...)</span>
+            <span class="field-key">colunas.esq</span>
+          </label>
+          <div class="input-row">
+            <input type="number" class="field-input" id="col-esq" step="1" min="0" max="600" placeholder="330">
+            <div class="range-wrap">
+              <input type="range" class="range-input" id="col-esq-range" min="0" max="600" step="1" value="330">
+              <div class="range-minmax"><span>0</span><span>600</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">
+            <span>Meio (Validade, Nº Registro)</span>
+            <span class="field-key">colunas.meio</span>
+          </label>
+          <div class="input-row">
+            <input type="number" class="field-input" id="col-meio" step="1" min="0" max="600" placeholder="480">
+            <div class="range-wrap">
+              <input type="range" class="range-input" id="col-meio-range" min="0" max="600" step="1" value="480">
+              <div class="range-minmax"><span>0</span><span>600</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">
+            <span>Direita (1ª Hab, Categoria)</span>
+            <span class="field-key">colunas.dir</span>
+          </label>
+          <div class="input-row">
+            <input type="number" class="field-input" id="col-dir" step="1" min="0" max="600" placeholder="550">
+            <div class="range-wrap">
+              <input type="range" class="range-input" id="col-dir-range" min="0" max="600" step="1" value="550">
+              <div class="range-minmax"><span>0</span><span>600</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- EIXO Y -->
+        <div class="section-label">Eixo Y · Linhas (0 a 850)</div>
+
+        <div class="field-group">
+          <label class="field-label">
+            <span>Linha 1 (Nome / 1ª Hab)</span>
+            <span class="field-key">linhas.row1</span>
+          </label>
+          <div class="input-row">
+            <input type="number" class="field-input" id="linha-1" step="1" min="0" max="850" placeholder="675">
+            <div class="range-wrap">
+              <input type="range" class="range-input" id="linha-1-range" min="0" max="850" step="1" value="675">
+              <div class="range-minmax"><span>0</span><span>850</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">
+            <span>Linha 2 (Data e Local Nasc.)</span>
+            <span class="field-key">linhas.row2</span>
+          </label>
+          <div class="input-row">
+            <input type="number" class="field-input" id="linha-2" step="1" min="0" max="850" placeholder="645">
+            <div class="range-wrap">
+              <input type="range" class="range-input" id="linha-2-range" min="0" max="850" step="1" value="645">
+              <div class="range-minmax"><span>0</span><span>850</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">
+            <span>Linha 3 (Emissão / Validade)</span>
+            <span class="field-key">linhas.row3</span>
+          </label>
+          <div class="input-row">
+            <input type="number" class="field-input" id="linha-3" step="1" min="0" max="850" placeholder="615">
+            <div class="range-wrap">
+              <input type="range" class="range-input" id="linha-3-range" min="0" max="850" step="1" value="615">
+              <div class="range-minmax"><span>0</span><span>850</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">
+            <span>Linha 4 (Doc. Identidade)</span>
+            <span class="field-key">linhas.row4</span>
+          </label>
+          <div class="input-row">
+            <input type="number" class="field-input" id="linha-4" step="1" min="0" max="850" placeholder="585">
+            <div class="range-wrap">
+              <input type="range" class="range-input" id="linha-4-range" min="0" max="850" step="1" value="585">
+              <div class="range-minmax"><span>0</span><span>850</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">
+            <span>Linha 5 (CPF / Registro / Cat.)</span>
+            <span class="field-key">linhas.row5</span>
+          </label>
+          <div class="input-row">
+            <input type="number" class="field-input" id="linha-5" step="1" min="0" max="850" placeholder="555">
+            <div class="range-wrap">
+              <input type="range" class="range-input" id="linha-5-range" min="0" max="850" step="1" value="555">
+              <div class="range-minmax"><span>0</span><span>850</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">
+            <span>Linha 6 (Nacionalidade)</span>
+            <span class="field-key">linhas.row6</span>
+          </label>
+          <div class="input-row">
+            <input type="number" class="field-input" id="linha-6" step="1" min="0" max="850" placeholder="525">
+            <div class="range-wrap">
+              <input type="range" class="range-input" id="linha-6-range" min="0" max="850" step="1" value="525">
+              <div class="range-minmax"><span>0</span><span>850</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">
+            <span>Linha 7 (Filiação - Pai)</span>
+            <span class="field-key">linhas.row7</span>
+          </label>
+          <div class="input-row">
+            <input type="number" class="field-input" id="linha-7" step="1" min="0" max="850" placeholder="495">
+            <div class="range-wrap">
+              <input type="range" class="range-input" id="linha-7-range" min="0" max="850" step="1" value="495">
+              <div class="range-minmax"><span>0</span><span>850</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">
+            <span>Linha 8 (Filiação - Mãe)</span>
+            <span class="field-key">linhas.row8</span>
+          </label>
+          <div class="input-row">
+            <input type="number" class="field-input" id="linha-8" step="1" min="0" max="850" placeholder="480">
+            <div class="range-wrap">
+              <input type="range" class="range-input" id="linha-8-range" min="0" max="850" step="1" value="480">
+              <div class="range-minmax"><span>0</span><span>850</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- FOTO -->
+        <div class="section-label">Foto</div>
+
+        <div class="foto-grid">
+          <div class="field-group">
+            <label class="field-label">
+              <span>X</span>
+              <span class="field-key">foto.x</span>
+            </label>
+            <div class="input-row">
+              <input type="number" class="field-input" id="foto-x" step="1" min="0" max="600" placeholder="55">
+              <div class="range-wrap">
+                <input type="range" class="range-input" id="foto-x-range" min="0" max="600" step="1" value="55">
+                <div class="range-minmax"><span>0</span><span>600</span></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="field-group">
+            <label class="field-label">
+              <span>Y</span>
+              <span class="field-key">foto.y</span>
+            </label>
+            <div class="input-row">
+              <input type="number" class="field-input" id="foto-y" step="1" min="0" max="850" placeholder="510">
+              <div class="range-wrap">
+                <input type="range" class="range-input" id="foto-y-range" min="0" max="850" step="1" value="510">
+                <div class="range-minmax"><span>0</span><span>850</span></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="field-group">
+            <label class="field-label">
+              <span>Largura (W)</span>
+              <span class="field-key">foto.w</span>
+            </label>
+            <div class="input-row">
+              <input type="number" class="field-input" id="foto-w" step="1" min="50" max="400" placeholder="155">
+              <div class="range-wrap">
+                <input type="range" class="range-input" id="foto-w-range" min="50" max="400" step="1" value="155">
+                <div class="range-minmax"><span>50</span><span>400</span></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="field-group">
+            <label class="field-label">
+              <span>Altura (H)</span>
+              <span class="field-key">foto.h</span>
+            </label>
+            <div class="input-row">
+              <input type="number" class="field-input" id="foto-h" step="1" min="50" max="400" placeholder="210">
+              <div class="range-wrap">
+                <input type="range" class="range-input" id="foto-h-range" min="50" max="400" step="1" value="210">
+                <div class="range-minmax"><span>50</span><span>400</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- AÇÕES -->
+        <div class="actions-bar">
+          <button class="btn btn-secondary" id="btnCancelar">
+            <i class="fas fa-rotate-left"></i>
+            <span>Descartar</span>
+          </button>
+          <button class="btn btn-primary" id="btnSalvar">
+            <i class="fas fa-floppy-disk"></i>
+            <span>Salvar Coordenadas</span>
+          </button>
+        </div>
+
+        <div class="status-bar" id="statusBar">
+          <span class="spinner"></span>
+          <span id="statusText">Carregando coordenadas...</span>
+        </div>
+      </div>
+
+      <!-- ===== COLUNA DIREITA: PRÉ-VISUALIZAÇÃO VISUAL ===== -->
+      <div class="preview-panel">
+        <div class="preview-header">
+          <h2><i class="fas fa-eye"></i> Pré-visualização em Tempo Real</h2>
+          <div class="zoom-controls">
+            <button class="zoom-btn" id="zoomOut" title="Diminuir zoom"><i class="fas fa-minus"></i></button>
+            <span class="zoom-value" id="zoomValue">100%</span>
+            <button class="zoom-btn" id="zoomIn" title="Aumentar zoom"><i class="fas fa-plus"></i></button>
+          </div>
+        </div>
+
+        <div class="upload-bg">
+          <label class="upload-bg-label" for="bgUpload">
+            <i class="fas fa-image"></i>
+            Selecione o fundo da CNH em branco para calibrar
+          </label>
+          <input type="file" id="bgUpload" accept="image/*, application/pdf" class="upload-bg-input">
+        </div>
+
+        <div class="preview-canvas-wrap">
+          <div class="preview-canvas" id="previewCanvas">
+            <img class="bg" id="bgImage" src="/cnh-modelo.jpeg" alt="Modelo CNH">
+
+            <!-- Elementos de texto sobrepostos (posicionados via JS) -->
+            <div class="overlay-el" id="ov-nome"><span class="tag">Nome</span>MARIA DA SILVA SOUZA</div>
+            <div class="overlay-el" id="ov-primeiraHab"><span class="tag">1ª Hab</span>AB</div>
+            <div class="overlay-el" id="ov-nascimento"><span class="tag">Nasc</span>15/03/1990</div>
+            <div class="overlay-el" id="ov-emissao"><span class="tag">Emissão</span>10/01/2020</div>
+            <div class="overlay-el red" id="ov-validade"><span class="tag">Validade</span>10/01/2030</div>
+            <div class="overlay-el" id="ov-docIdentidade"><span class="tag">RG</span>12.345.678-9</div>
+            <div class="overlay-el" id="ov-cpf"><span class="tag">CPF</span>123.456.789-00</div>
+            <div class="overlay-el red" id="ov-registro"><span class="tag">Registro</span>12345678901</div>
+            <div class="overlay-el red" id="ov-categoria"><span class="tag">Cat</span>B</div>
+            <div class="overlay-el" id="ov-nacionalidade"><span class="tag">Nac</span>BRASILEIRA</div>
+            <div class="overlay-el" id="ov-filiacaoPai"><span class="tag">Pai</span>JOSÉ DA SILVA</div>
+            <div class="overlay-el" id="ov-filiacaoMae"><span class="tag">Mãe</span>ANA SOUZA</div>
+            <div class="overlay-el" id="ov-local"><span class="tag">Local</span>SÃO PAULO/SP</div>
+
+            <!-- Bloco da foto -->
+            <div class="overlay-photo" id="ov-foto">
+              <span class="photo-label">Foto</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      'use strict';
+
+      // ===== Constantes do PDF (mesmas do cnhPdfLib.js) =====
+      var PAGE_W = 595;   // largura da página A4 em pontos
+      var PAGE_H = 842;   // altura da página A4 em pontos
+
+      // ===== Mapeamento de inputs -> chaves do JSON =====
+      var MAPA_INPUTS = {
+        'col-esq':  { secao: 'colunas', chave: 'esq' },
+        'col-meio': { secao: 'colunas', chave: 'meio' },
+        'col-dir':  { secao: 'colunas', chave: 'dir' },
+        'linha-1':  { secao: 'linhas',  chave: 'row1' },
+        'linha-2':  { secao: 'linhas',  chave: 'row2' },
+        'linha-3':  { secao: 'linhas',  chave: 'row3' },
+        'linha-4':  { secao: 'linhas',  chave: 'row4' },
+        'linha-5':  { secao: 'linhas',  chave: 'row5' },
+        'linha-6':  { secao: 'linhas',  chave: 'row6' },
+        'linha-7':  { secao: 'linhas',  chave: 'row7' },
+        'linha-8':  { secao: 'linhas',  chave: 'row8' },
+        'foto-x':   { secao: 'foto',    chave: 'x' },
+        'foto-y':   { secao: 'foto',    chave: 'y' },
+        'foto-w':   { secao: 'foto',    chave: 'w' },
+        'foto-h':   { secao: 'foto',    chave: 'h' }
+      };
+
+      // ===== Mapeamento de campos de texto -> elementos de overlay =====
+      // Cada campo usa uma coluna (esq/meio/dir) e uma linha (rowN).
+      var CAMPOS_OVERLAY = [
+        { id: 'ov-nome',          col: 'esq',  row: 'row1' },
+        { id: 'ov-primeiraHab',   col: 'dir',  row: 'row1' },
+        { id: 'ov-nascimento',    col: 'esq',  row: 'row2' },
+        { id: 'ov-emissao',       col: 'esq',  row: 'row3' },
+        { id: 'ov-validade',      col: 'meio', row: 'row3' },
+        { id: 'ov-docIdentidade', col: 'esq',  row: 'row4' },
+        { id: 'ov-cpf',           col: 'esq',  row: 'row5' },
+        { id: 'ov-registro',      col: 'meio', row: 'row5' },
+        { id: 'ov-categoria',     col: 'dir',  row: 'row5' },
+        { id: 'ov-nacionalidade', col: 'esq',  row: 'row6' },
+        { id: 'ov-filiacaoPai',   col: 'esq',  row: 'row7' },
+        { id: 'ov-filiacaoMae',   col: 'esq',  row: 'row8' },
+        { id: 'ov-local',         col: null,   row: null, fixo: { x: 60, y: 110 } }
+      ];
+
+      // ===== Estado =====
+      var zoom = 1;
+      var canvasW = 480; // largura base do canvas de pré-visualização (px)
+      var canvasH = Math.round(canvasW * (PAGE_H / PAGE_W)); // proporção A4
+
+      var statusBar = document.getElementById('statusBar');
+      var statusText = document.getElementById('statusText');
+      var previewCanvas = document.getElementById('previewCanvas');
+
+      function setStatus(msg, tipo) {
+        statusText.textContent = msg;
+        statusText.className = tipo || '';
+      }
+
+      function setLoading(ativo) {
+        if (ativo) {
+          statusBar.classList.add('loading');
+        } else {
+          statusBar.classList.remove('loading');
+        }
+      }
+
+      // ===== Conversão PDF (bottom-left) -> tela (top-left) =====
+      // O canvas representa a página A4 (595x842 pt). A escala converte pontos
+      // do PDF em pixels da tela. O eixo Y é invertido (origem no topo).
+      function pdfParaTela(xPt, yPt) {
+        var escala = canvasW / PAGE_W;
+        return {
+          x: xPt * escala,
+          y: (PAGE_H - yPt) * escala
+        };
+      }
+
+      // ===== Atualizar posição de um elemento de overlay =====
+      function posicionarOverlay(el, xPt, yPt) {
+        var p = pdfParaTela(xPt, yPt);
+        el.style.left = p.x + 'px';
+        el.style.top = p.y + 'px';
+      }
+
+      // ===== Redesenhar todos os elementos na pré-visualização =====
+      function redesenhar() {
+        // Tamanho do canvas conforme o zoom
+        previewCanvas.style.width = (canvasW * zoom) + 'px';
+        previewCanvas.style.height = (canvasH * zoom) + 'px';
+
+        // Textos
+        CAMPOS_OVERLAY.forEach(function (campo) {
+          var el = document.getElementById(campo.id);
+          if (!el) return;
+          if (campo.fixo) {
+            posicionarOverlay(el, campo.fixo.x, campo.fixo.y);
+          } else {
+            var colVal = parseInt(document.getElementById('col-' + campo.col).value, 10);
+            var rowVal = parseInt(document.getElementById('linha-' + campo.row.replace('row', '')).value, 10);
+            if (isNaN(colVal)) colVal = 0;
+            if (isNaN(rowVal)) rowVal = 0;
+            posicionarOverlay(el, colVal, rowVal);
+          }
+        });
+
+        // Foto
+        var fotoEl = document.getElementById('ov-foto');
+        var fx = parseInt(document.getElementById('foto-x').value, 10);
+        var fy = parseInt(document.getElementById('foto-y').value, 10);
+        var fw = parseInt(document.getElementById('foto-w').value, 10);
+        var fh = parseInt(document.getElementById('foto-h').value, 10);
+        if (isNaN(fx)) fx = 0;
+        if (isNaN(fy)) fy = 0;
+        if (isNaN(fw)) fw = 155;
+        if (isNaN(fh)) fh = 210;
+        var escala = canvasW / PAGE_W;
+        var p = pdfParaTela(fx, fy);
+        fotoEl.style.left = p.x + 'px';
+        fotoEl.style.top = p.y + 'px';
+        fotoEl.style.width = (fw * escala) + 'px';
+        fotoEl.style.height = (fh * escala) + 'px';
+      }
+
+      // ===== Sincronização bidirecional slider <-> input numérico =====
+      function vincularSlider(inputId) {
+        var input = document.getElementById(inputId);
+        var range = document.getElementById(inputId + '-range');
+        if (!input || !range) return;
+
+        // Slider -> input numérico (tempo real) + redesenha
+        range.addEventListener('input', function () {
+          input.value = range.value;
+          redesenhar();
+        });
+
+        // Input numérico -> slider (quando digitado manualmente)
+        input.addEventListener('input', function () {
+          var v = parseInt(input.value, 10);
+          if (!isNaN(v)) {
+            var min = parseInt(range.min, 10);
+            var max = parseInt(range.max, 10);
+            if (v < min) v = min;
+            if (v > max) v = max;
+            range.value = v;
+          }
+          redesenhar();
+        });
+      }
+
+      // ===== Preencher inputs e sliders a partir do config =====
+      function preencherInputs(config) {
+        Object.keys(MAPA_INPUTS).forEach(function (id) {
+          var m = MAPA_INPUTS[id];
+          var el = document.getElementById(id);
+          var range = document.getElementById(id + '-range');
+          var valor = config && config[m.secao] ? config[m.secao][m.chave] : undefined;
+          if (valor !== undefined && valor !== null) {
+            if (el) el.value = valor;
+            if (range) range.value = valor;
+          }
+        });
+        redesenhar();
+      }
+
+      // ===== Montar objeto JSON a partir dos inputs =====
+      function montarConfig() {
+        var config = {
+          colunas: {},
+          linhas: {},
+          foto: {}
+        };
+        Object.keys(MAPA_INPUTS).forEach(function (id) {
+          var m = MAPA_INPUTS[id];
+          var el = document.getElementById(id);
+          var valor = el ? parseInt(el.value, 10) : NaN;
+          if (isNaN(valor)) valor = 0;
+          config[m.secao][m.chave] = valor;
+        });
+        return config;
+      }
+
+      // ===== Carregar coordenadas (GET) =====
+      function carregarCoordenadas() {
+        setLoading(true);
+        setStatus('Carregando coordenadas...', '');
+
+        fetch('/api/config/cnh')
+          .then(function (res) {
+            if (!res.ok) throw new Error('Erro HTTP ' + res.status);
+            return res.json();
+          })
+          .then(function (data) {
+            if (!data.ok) throw new Error(data.erro || 'Falha ao carregar configuração.');
+            preencherInputs(data.config);
+            setLoading(false);
+            setStatus('Coordenadas carregadas com sucesso.', 'ok');
+          })
+          .catch(function (err) {
+            setLoading(false);
+            setStatus('Erro ao carregar: ' + (err && err.message ? err.message : 'erro desconhecido.'), 'err');
+          });
+      }
+
+      // ===== Salvar coordenadas (POST) =====
+      function salvarCoordenadas() {
+        var config = montarConfig();
+        var btn = document.getElementById('btnSalvar');
+        btn.disabled = true;
+        setLoading(true);
+        setStatus('Salvando coordenadas...', '');
+
+        fetch('/api/config/cnh', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(config)
+        })
+          .then(function (res) {
+            if (!res.ok) throw new Error('Erro HTTP ' + res.status);
+            return res.json();
+          })
+          .then(function (data) {
+            if (!data.ok) throw new Error(data.erro || 'Falha ao salvar configuração.');
+            setLoading(false);
+            setStatus('Coordenadas salvas com sucesso!', 'ok');
+            alert('✅ Coordenadas salvas com sucesso!\n\nAs novas posições serão aplicadas na próxima geração do PDF da CNH.');
+          })
+          .catch(function (err) {
+            setLoading(false);
+            setStatus('Erro ao salvar: ' + (err && err.message ? err.message : 'erro desconhecido.'), 'err');
+            alert('❌ Erro ao salvar coordenadas:\n' + (err && err.message ? err.message : 'erro desconhecido.'));
+          })
+          .finally(function () {
+            btn.disabled = false;
+          });
+      }
+
+      // ===== Descartar alterações =====
+      function descartarAlteracoes() {
+        carregarCoordenadas();
+      }
+
+      // ===== Zoom =====
+      function aplicarZoom() {
+        document.getElementById('zoomValue').textContent = Math.round(zoom * 100) + '%';
+        redesenhar();
+      }
+
+      document.getElementById('zoomIn').addEventListener('click', function () {
+        zoom = Math.min(2, zoom + 0.1);
+        aplicarZoom();
+      });
+
+      document.getElementById('zoomOut').addEventListener('click', function () {
+        zoom = Math.max(0.5, zoom - 0.1);
+        aplicarZoom();
+      });
+
+      // ===== Upload de fundo dinâmico =====
+      document.getElementById('bgUpload').addEventListener('change', function (evt) {
+        var file = evt.target.files && evt.target.files[0];
+        if (!file) return;
+        var bg = document.getElementById('bgImage');
+        if (file.type === 'application/pdf') {
+          // PDF: usa FileReader para exibir como data URL (o navegador renderiza a 1ª página)
+          var reader = new FileReader();
+          reader.onload = function (e) {
+            bg.src = e.target.result;
+          };
+          reader.readAsDataURL(file);
+        } else {
+          // Imagem: usa URL.createObjectURL para exibição imediata
+          bg.src = URL.createObjectURL(file);
+        }
+        var status = document.getElementById('statusText');
+        if (status) status.textContent = 'Fundo carregado: ' + file.name;
+      });
+
+      // ===== Vincular todos os sliders =====
+      Object.keys(MAPA_INPUTS).forEach(function (id) {
+        vincularSlider(id);
+      });
+
+      // ===== Eventos =====
+      document.getElementById('btnSalvar').addEventListener('click', salvarCoordenadas);
+      document.getElementById('btnCancelar').addEventListener('click', descartarAlteracoes);
+      document.getElementById('btnRefresh').addEventListener('click', carregarCoordenadas);
+
+      // ===== Inicialização =====
+      redesenhar();
+      carregarCoordenadas();
+    })();
+  </script>
+</body>
+</html>

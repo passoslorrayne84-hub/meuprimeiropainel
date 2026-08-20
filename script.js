@@ -416,6 +416,54 @@ function hexToRgba(hex, alpha) {
    ============================================================ */
 const CMS_STORAGE_KEY = 'FredContas_MasterModules';
 
+// Catálogo padrão (FALLBACK) com TODOS os serviços vitais do painel.
+// Usado quando o localStorage está vazio/ausente, garantindo que a tela
+// do usuário SEMPRE exiba Consultas (CPF/CNH/Telefone/Placa), Gerador de
+// CRLV (Uber/99), Gerador de CNH, Chassi, etc. Os IDs seguem exatamente
+// os reconhecidos por detectToolType/isToolViewportService.
+const CMS_DEFAULT_MODULES = {
+  categorias: [
+    {
+      id: 'cat_1',
+      nome: 'Checkers & Consultas',
+      servicos: [
+        { id: 'consulta-cnh', nome: 'Consulta CNH', icone: 'fas fa-id-card', status: 'ativo' },
+        { id: 'consulta-cpf', nome: 'Consulta CPF', icone: 'fas fa-user-check', status: 'ativo' },
+        { id: 'consulta-telefone', nome: 'Consulta Telefone', icone: 'fas fa-phone', status: 'ativo' },
+        { id: 'consulta-placa', nome: 'Consulta Placa', icone: 'fas fa-car-side', status: 'ativo' },
+        { id: 'score-credito', nome: 'Score de Crédito', icone: 'fas fa-chart-line', status: 'manutencao' }
+      ]
+    },
+    {
+      id: 'cat_2',
+      nome: 'Geradores',
+      servicos: [
+        { id: 'gerar-crlv', nome: 'Gerador de CRLV (Uber / 99)', icone: 'fas fa-file-alt', status: 'ativo' },
+        { id: 'gerador-cnh', nome: 'Gerador de CNH', icone: 'fas fa-id-card', status: 'ativo' },
+        { id: 'gerador-chassi', nome: 'Gerador de Chassi', icone: 'fas fa-fingerprint', status: 'ativo' },
+        { id: 'gerador-cpf', nome: 'Gerador de CPF', icone: 'fas fa-dice', status: 'ativo' },
+        { id: 'gerador-cnpj', nome: 'Gerador de CNPJ', icone: 'fas fa-building', status: 'ativo' }
+      ]
+    },
+    {
+      id: 'cat_3',
+      nome: 'Fotos & Facial',
+      servicos: [
+        { id: 'reconhecimento-facial', nome: 'Reconhecimento Facial', icone: 'fas fa-face-smile', status: 'ativo' },
+        { id: 'busca-por-foto', nome: 'Busca por Foto', icone: 'fas fa-image', status: 'inativo' }
+      ]
+    },
+    {
+      id: 'cat_4',
+      nome: 'Ferramentas',
+      servicos: [
+        { id: 'venda-de-bicos', nome: 'Venda de Bicos', icone: 'fas fa-bolt', status: 'ativo' },
+        { id: 'modo-foto-99', nome: 'Modo Foto 99', icone: 'fas fa-camera', status: 'ativo' }
+      ]
+    }
+  ]
+};
+
 // Mapeia nomes de categorias do CMS para as abas existentes do painel.
 // A comparação é feita por palavra-chave (case-insensitive).
 const CMS_CATEGORY_TAB_MAP = [
@@ -464,9 +512,20 @@ function cmsResolveTab(catNome) {
 function cmsLoadModules() {
   try {
     const raw = localStorage.getItem(CMS_STORAGE_KEY);
-    if (!raw) return null;
+    if (!raw) {
+      // FALLBACK SEGURO: sem dados no localStorage (ex.: perda após bug ou
+      // primeira visita), usa o catálogo padrão COMPLETO com todos os serviços
+      // vitais (Consultas CPF/CNH/Telefone/Placa, CRLV Uber/99, CNH, Chassi).
+      // Assim a tela do usuário NUNCA fica sem os serviços essenciais.
+      console.warn('[CMS] LocalStorage vazio — usando catálogo padrão completo.');
+      return JSON.parse(JSON.stringify(CMS_DEFAULT_MODULES));
+    }
     const parsed = JSON.parse(raw);
-    if (!parsed || !Array.isArray(parsed.categorias)) return null;
+    if (!parsed || !Array.isArray(parsed.categorias)) {
+      // Dados presentes mas inválidos -> também cai no catálogo padrão.
+      console.warn('[CMS] Dados inválidos no localStorage — usando catálogo padrão completo.');
+      return JSON.parse(JSON.stringify(CMS_DEFAULT_MODULES));
+    }
 
     // Validação de esquema: garante que toda categoria tenha id, nome e
     // um array de serviços; cada serviço tenha id, nome, icone e status.
@@ -488,6 +547,74 @@ function cmsLoadModules() {
               }))
           : []
       }));
+
+    // ============================================================
+    // MERGE DE GARANTIA (RECUPERACAO DO PAINEL DO USUARIO)
+    // ------------------------------------------------------------
+    // Independente do que exista salvo no localStorage, os servicos
+    // VITAIS (Consultas CPF/CNH/Telefone/Placa, Gerador de CRLV, Gerador
+    // de CNH, etc.) SEMPRE serao exibidos. Isso restaura a tela original
+    // mesmo quando dados antigos/incompletos foram persistidos no storage
+    // (ex.: um salvamento anterior sem as funcoes essenciais).
+    const defaults = (CMS_DEFAULT_MODULES && CMS_DEFAULT_MODULES.categorias) || [];
+
+    // Mapa de IDs de servico ja presentes no storage (por categoria e global).
+    const idsPorCat = new Map();   // idCategoria -> Set(ids)
+    const idsGlobal = new Set();
+    categorias.forEach(cat => {
+      const ids = new Set((cat.servicos || []).map(s => s && s.id));
+      idsPorCat.set(cat.id, ids);
+      ids.forEach(id => id != null && idsGlobal.add(id));
+    });
+
+    // Rastrea se algo foi adicionado, para persistir o catalogo reparado
+    // de volta ao localStorage (auto-reparo) somente quando necessario.
+    let adicionou = false;
+
+    defaults.forEach(defCat => {
+      if (!defCat || !defCat.servicos || !Array.isArray(defCat.servicos)) return;
+
+      // Procura a categoria correspondente no storage (por id ou nome).
+      const alvo = categorias.find(cat =>
+        cat && (cat.id === defCat.id ||
+          (defCat.nome && cmsNormalize(cat.nome) === cmsNormalize(defCat.nome)))
+      );
+
+      if (alvo) {
+        // Categoria ja existe -> garante os servicos vitais faltantes,
+        // sem duplicar o que ja esta presente.
+        const ids = idsPorCat.get(alvo.id) || new Set();
+        defCat.servicos.forEach(s => {
+          if (s && s.id && !ids.has(s.id)) {
+            alvo.servicos.push({
+              id: s.id,
+              nome: s.nome || 'Servico',
+              icone: s.icone || 'fas fa-cube',
+              status: s.status || 'ativo',
+              descricao: s.descricao || ''
+            });
+            ids.add(s.id);
+            adicionou = true;
+          }
+        });
+      } else {
+        // Categoria vital inteira ausente -> adiciona ao final.
+        categorias.push(JSON.parse(JSON.stringify(defCat)));
+        adicionou = true;
+      }
+    });
+
+    // AUTO-REPARO: se o merge restaurou servicos que faltavam, persiste o
+    // catalogo completo no localStorage para que a proxima carga ja venha
+    // integra (sem depender do merge a cada render).
+    if (adicionou) {
+      try {
+        localStorage.setItem(CMS_STORAGE_KEY, JSON.stringify({ categorias }));
+        console.warn('[CMS] Catalogo reparado: servicos vitais persistidos de volta no localStorage.');
+      } catch (e) {
+        console.warn('[CMS] Nao foi possivel persistir o catalogo reparado.', e);
+      }
+    }
 
     return { categorias };
   } catch (e) {

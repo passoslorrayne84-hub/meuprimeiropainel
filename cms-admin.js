@@ -12,31 +12,48 @@
 const CMS_STORAGE_KEY = 'FredContas_MasterModules';
 
 /* ===== DADOS PADRÃO (FALLBACK) ===== */
+// Catálogo completo com TODOS os serviços vitais do painel (Consultas CPF/CNH/
+// Placa/Telefone, Gerador de CRLV Uber/99, Gerador de CNH, Chassi, etc.).
+// Os IDs seguem exatamente os reconhecidos por detectToolType/isToolViewportService
+// no script.js, garantindo que cada card abra a ferramenta correta.
 const CMS_DEFAULT_MODULES = {
   categorias: [
     {
       id: 'cat_1',
       nome: 'Checkers & Consultas',
       servicos: [
-        { id: 'srv_1', nome: 'Consulta CNH', icone: 'fas fa-id-card', status: 'ativo' },
-        { id: 'srv_2', nome: 'Consulta CPF', icone: 'fas fa-user-check', status: 'ativo' },
-        { id: 'srv_3', nome: 'Score de Crédito', icone: 'fas fa-chart-line', status: 'manutencao' }
+        { id: 'consulta-cnh', nome: 'Consulta CNH', icone: 'fas fa-id-card', status: 'ativo' },
+        { id: 'consulta-cpf', nome: 'Consulta CPF', icone: 'fas fa-user-check', status: 'ativo' },
+        { id: 'consulta-telefone', nome: 'Consulta Telefone', icone: 'fas fa-phone', status: 'ativo' },
+        { id: 'consulta-placa', nome: 'Consulta Placa', icone: 'fas fa-car-side', status: 'ativo' },
+        { id: 'score-credito', nome: 'Score de Crédito', icone: 'fas fa-chart-line', status: 'manutencao' }
       ]
     },
     {
       id: 'cat_2',
-      nome: 'Fotos & Facial',
+      nome: 'Geradores',
       servicos: [
-        { id: 'srv_4', nome: 'Reconhecimento Facial', icone: 'fas fa-face-smile', status: 'ativo' },
-        { id: 'srv_5', nome: 'Busca por Foto', icone: 'fas fa-image', status: 'inativo' }
+        { id: 'gerar-crlv', nome: 'Gerador de CRLV (Uber / 99)', icone: 'fas fa-file-alt', status: 'ativo' },
+        { id: 'gerador-cnh', nome: 'Gerador de CNH', icone: 'fas fa-id-card', status: 'ativo' },
+        { id: 'gerador-chassi', nome: 'Gerador de Chassi', icone: 'fas fa-fingerprint', status: 'ativo' },
+        { id: 'gerador-cpf', nome: 'Gerador de CPF', icone: 'fas fa-dice', status: 'ativo' },
+        { id: 'gerador-cnpj', nome: 'Gerador de CNPJ', icone: 'fas fa-building', status: 'ativo' }
       ]
     },
     {
       id: 'cat_3',
-      nome: 'Geradores',
+      nome: 'Fotos & Facial',
       servicos: [
-        { id: 'srv_6', nome: 'Gerador de CPF', icone: 'fas fa-dice', status: 'ativo' },
-        { id: 'srv_7', nome: 'Gerador de CNPJ', icone: 'fas fa-building', status: 'ativo' }
+        { id: 'reconhecimento-facial', nome: 'Reconhecimento Facial', icone: 'fas fa-face-smile', status: 'ativo' },
+        { id: 'busca-por-foto', nome: 'Busca por Foto', icone: 'fas fa-image', status: 'inativo' }
+      ]
+    },
+    {
+      id: 'cat_4',
+      nome: 'Ferramentas',
+      servicos: [
+        { id: 'venda-de-bicos', nome: 'Venda de Bicos', icone: 'fas fa-bolt', status: 'ativo' },
+        { id: 'modo-foto-99', nome: 'Modo Foto 99', icone: 'fas fa-camera', status: 'ativo' }
       ]
     }
   ]
@@ -146,12 +163,14 @@ function cmsLoadModules() {
       const parsed = JSON.parse(raw);
       if (cmsIsNewSchema(parsed)) {
         cmsModules = parsed;
+        cmsEnsureVitalServices();
         return;
       }
       // Schema antigo: migra com segurança
       const migrated = cmsMigrateLegacy(parsed);
       if (migrated) {
         cmsModules = migrated;
+        cmsEnsureVitalServices();
         cmsPersist(); // persiste a versão migrada
         console.log('[CMS] Dados migrados do schema antigo para o novo schema.');
         return;
@@ -162,6 +181,45 @@ function cmsLoadModules() {
   }
   // Fallback: clona o padrão para não mutar a constante
   cmsModules = JSON.parse(JSON.stringify(CMS_DEFAULT_MODULES));
+  cmsEnsureVitalServices();
+}
+
+// Garante que os serviços vitais (Consultas CPF/CNH/Telefone/Placa, CRLV,
+// CNH, Chassi) SEMPRE existam no catálogo, mesclando com os padrões quando
+// o localStorage contém dados antigos/incompletos. Não duplica serviços.
+function cmsEnsureVitalServices() {
+  if (!cmsModules || !Array.isArray(cmsModules.categorias)) return;
+  const defaults = (CMS_DEFAULT_MODULES && CMS_DEFAULT_MODULES.categorias) || [];
+  const norm = (t) => String(t || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  const idsPorCat = new Map();
+  cmsModules.categorias.forEach(cat => {
+    const ids = new Set((cat.servicos || []).map(s => s && s.id));
+    idsPorCat.set(cat.id, ids);
+  });
+  defaults.forEach(defCat => {
+    if (!defCat || !defCat.servicos || !Array.isArray(defCat.servicos)) return;
+    const alvo = cmsModules.categorias.find(cat =>
+      cat && (cat.id === defCat.id ||
+        (defCat.nome && norm(cat.nome) === norm(defCat.nome)))
+    );
+    if (alvo) {
+      const ids = idsPorCat.get(alvo.id) || new Set();
+      defCat.servicos.forEach(s => {
+        if (s && s.id && !ids.has(s.id)) {
+          alvo.servicos.push({
+            id: s.id,
+            nome: s.nome || 'Servico',
+            icone: s.icone || 'fas fa-cube',
+            status: s.status || 'ativo',
+            descricao: s.descricao || ''
+          });
+          ids.add(s.id);
+        }
+      });
+    } else {
+      cmsModules.categorias.push(JSON.parse(JSON.stringify(defCat)));
+    }
+  });
 }
 
 function cmsPersist() {
@@ -687,6 +745,7 @@ function cmsRestoreBackup() {
     return;
   }
   cmsModules = backup;
+  cmsEnsureVitalServices();
   cmsExpandedCats = {};
   cmsRecomputeIds();
   cmsRenderAll();

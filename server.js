@@ -20,6 +20,9 @@ const { gerarCrlvHtml } = require('./templateCRLV');
 // pdf-lib: preenche o crlv-modelo.pdf (arquivo oficial na raiz) com os dados do
 // veículo nas coordenadas X/Y mapeadas — geração rápida sem Chromium.
 const { gerarCrlvPdfComPdfLib, MODELO_PATH } = require('./crlvPdfLib');
+// pdf-lib: gera o PDF da CNH preenchendo a imagem cnh-modelo.jpeg com os dados
+// extraídos do texto colado no frontend (parse + desenho + foto + fallbacks).
+const { gerarCnhPdf, parseCnhTexto } = require('./cnhPdfLib');
 
 const PORT = process.env.PORT || 3000;
 const ROOT = __dirname;
@@ -286,6 +289,92 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // ===== ENDPOINT: GERAR CNH PDF VIA PDF-LIB =====
+  // Recebe o texto colado no <textarea> (formato "CNH COMPLETA") e a foto
+  // (base64) do usuário. Faz o parse dos campos e gera o PDF preenchendo a
+  // imagem cnh-modelo.jpeg com pdf-lib (rápido, sem Chromium).
+  // Uso: POST /api/gerar-cnh-pdf  body: { texto: "...", foto: "data:image/...;base64,..." }
+  if (req.method === 'POST' && urlPath === '/api/gerar-cnh-pdf') {
+    console.log('[CNH-PDF] 📥 Endpoint /api/gerar-cnh-pdf ACESSADO (POST).');
+    let body = '';
+    req.on('data', (chunk) => { body += chunk; });
+    req.on('end', async () => {
+      try {
+        const dados = JSON.parse(body || '{}');
+        const texto = String(dados.texto || '');
+        const foto = dados.foto || null;
+        console.log('[CNH-PDF] 🔍 texto recebido (' + texto.length + ' caracteres), foto: ' + (foto ? 'presente' : 'ausente') + '.');
+
+        // Faz o parse do texto colado e gera o PDF (com fallbacks internos).
+        const campos = parseCnhTexto(texto);
+        const pdfBuffer = await gerarCnhPdf(campos, foto);
+        console.log('[CNH-PDF] ✅ PDF gerado (' + pdfBuffer.length + ' bytes).');
+
+        res.writeHead(200, {
+          'Content-Type': 'application/pdf',
+          'Content-Disposition': 'inline; filename="CNH.pdf"',
+          'Content-Length': pdfBuffer.length
+        });
+        res.end(pdfBuffer);
+      } catch (e) {
+        console.error('[CNH-PDF] ❌ Erro ao gerar o PDF:', e && e.stack ? e.stack : e);
+        res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end(JSON.stringify({ ok: false, erro: 'Erro ao gerar o CNH PDF: ' + (e && e.message ? e.message : 'erro desconhecido.') }));
+      }
+    });
+    return;
+  }
+
+  // ===== ENDPOINTS: CONFIGURAÇÃO DE COORDENADAS DA CNH =====
+  // Gerencia o arquivo cnh-coordenadas.json (banco de coordenadas usado
+  // pelo cnhPdfLib.js para posicionar os textos/foto sobre a imagem de fundo).
+  // GET  /api/config/cnh -> lê e retorna o conteúdo atual do arquivo.
+  // POST /api/config/cnh -> recebe o novo JSON e sobrescreve o arquivo.
+  const CNH_CONFIG_PATH = path.join(ROOT, 'cnh-coordenadas.json');
+
+  if (req.method === 'GET' && urlPath === '/api/config/cnh') {
+    try {
+      if (!fs.existsSync(CNH_CONFIG_PATH)) {
+        res.writeHead(404, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end(JSON.stringify({ ok: false, erro: 'Arquivo cnh-coordenadas.json não encontrado.' }));
+        return;
+      }
+      const conteudo = JSON.parse(fs.readFileSync(CNH_CONFIG_PATH, 'utf8'));
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify({ ok: true, config: conteudo }));
+    } catch (e) {
+      console.error('[CNH-CONFIG] ❌ Erro ao ler coordenadas:', e && e.stack ? e.stack : e);
+      res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify({ ok: false, erro: 'Erro ao ler cnh-coordenadas.json: ' + (e && e.message ? e.message : 'erro desconhecido.') }));
+    }
+    return;
+  }
+
+  if (req.method === 'POST' && urlPath === '/api/config/cnh') {
+    console.log('[CNH-CONFIG] 📥 Endpoint /api/config/cnh ACESSADO (POST).');
+    let body = '';
+    req.on('data', (chunk) => { body += chunk; });
+    req.on('end', () => {
+      try {
+        const novoConfig = JSON.parse(body || '{}');
+        // Validação básica: garante que as seções principais existam.
+        if (!novoConfig || typeof novoConfig !== 'object') {
+          throw new Error('Payload inválido: esperado um objeto JSON.');
+        }
+        // Salva permanentemente no arquivo (sobrescreve).
+        fs.writeFileSync(CNH_CONFIG_PATH, JSON.stringify(novoConfig, null, 2), 'utf8');
+        console.log('[CNH-CONFIG] ✅ Coordenadas salvas em cnh-coordenadas.json.');
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end(JSON.stringify({ ok: true, config: novoConfig }));
+      } catch (e) {
+        console.error('[CNH-CONFIG] ❌ Erro ao salvar coordenadas:', e && e.stack ? e.stack : e);
+        res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end(JSON.stringify({ ok: false, erro: 'Erro ao salvar cnh-coordenadas.json: ' + (e && e.message ? e.message : 'erro desconhecido.') }));
+      }
+    });
+    return;
+  }
+
   // ===== INTEGRAÇÃO LOSDADOS (PROXY ISOLADO) =====
   // Roteia as requisições da API LosDados para o controller isolado.
   // O controller é a única ponte com a LosDados e injeta a API Key no
@@ -340,7 +429,12 @@ const server = http.createServer((req, res) => {
               res.end('404 Not Found');
               return;
             }
-            res.writeHead(200, { 'Content-Type': MIME_TYPES['.html'] });
+            res.writeHead(200, {
+              'Content-Type': MIME_TYPES['.html'],
+              'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
+              'Pragma': 'no-cache',
+              'Expires': '0'
+            });
             res.end(injectLiveReload(indexContent.toString()));
           });
           return;
@@ -359,13 +453,22 @@ const server = http.createServer((req, res) => {
     const ext = path.extname(filePath).toLowerCase();
     const contentType = MIME_TYPES[ext] || 'application/octet-stream';
 
-    // Injeta o script de live-reload apenas em arquivos HTML
-    let body = content.toString();
+    // Injeta o script de live-reload apenas em arquivos HTML.
+    // Arquivos binários (imagens, PDFs, etc.) devem ser enviados como buffer
+    // bruto — converter para string corrompe os bytes (substituição UTF-8).
+    let body = content;
     if (ext === '.html') {
-      body = injectLiveReload(body);
+      body = injectLiveReload(content.toString());
     }
 
-    res.writeHead(200, { 'Content-Type': contentType });
+    res.writeHead(200, {
+      'Content-Type': contentType,
+      // Desativa cache no navegador para que o painel SEMPRE carregue a
+      // versão mais recente do HTML/CSS/JS (evita telas antigas por cache).
+      'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
+      'Pragma': 'no-cache',
+      'Expires': '0'
+    });
     res.end(body);
   });
 });
